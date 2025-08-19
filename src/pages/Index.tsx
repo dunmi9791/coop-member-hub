@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   Wallet, 
   CreditCard, 
@@ -8,7 +10,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   FileText,
-  Download
+  Download,
+  LogOut
 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { FinancialCard } from "@/components/dashboard/FinancialCard";
@@ -19,9 +22,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Check if user is logged in via demo credentials
+    const demoUser = localStorage.getItem('demoUser');
+    if (!demoUser) {
+      navigate('/login');
+      return;
+    }
+    setUser(JSON.parse(demoUser));
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('demoUser');
+    navigate('/login');
+  };
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
   const memberData = {
-    name: "Sarah Adebayo",
-    membershipId: "MEM-2020-4521",
+    name: user?.role === "Admin" ? "Admin User" : user?.role === "Loan Officer" ? "John Okafor" : "Sarah Adebayo",
+    membershipId: user?.role === "Admin" ? "ADM-2020-0001" : user?.role === "Loan Officer" ? "OFF-2020-1002" : "MEM-2020-4521",
     savingsBalance: "₦1,250,000",
     loanBalance: "₦85,000",
     investments: [
@@ -68,10 +92,21 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-background">
       <div className="container mx-auto px-4 py-8">
-        <DashboardHeader 
-          memberName={memberData.name}
-          membershipId={memberData.membershipId}
-        />
+        <div className="flex justify-between items-center mb-8">
+          <DashboardHeader 
+            memberName={memberData.name}
+            membershipId={memberData.membershipId}
+          />
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleLogout}
+            className="flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </div>
         
         {/* Financial Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

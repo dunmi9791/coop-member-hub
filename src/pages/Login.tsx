@@ -1,28 +1,53 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff } from "lucide-react";
 // Using placeholder for logo - you can upload your NLNG COOP logo to src/assets/
 
+const DEMO_CREDENTIALS = [
+  { email: "member@nlng.coop", password: "demo123", role: "Member" },
+  { email: "admin@nlng.coop", password: "admin123", role: "Admin" },
+  { email: "officer@nlng.coop", password: "officer123", role: "Loan Officer" }
+];
+
 const Login = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
     
-    // TODO: Integrate with Odoo backend
-    console.log("Login attempt:", { email, password });
+    // Check demo credentials
+    const user = DEMO_CREDENTIALS.find(
+      cred => cred.email === email && cred.password === password
+    );
     
-    // Simulate API call
     setTimeout(() => {
+      if (user) {
+        // Store user info in localStorage for demo purposes
+        localStorage.setItem('demoUser', JSON.stringify(user));
+        navigate('/');
+      } else {
+        setError("Invalid credentials. Try demo@nlng.coop / demo123");
+      }
       setIsLoading(false);
     }, 1000);
+  };
+
+  const fillDemoCredentials = (credentials: typeof DEMO_CREDENTIALS[0]) => {
+    setEmail(credentials.email);
+    setPassword(credentials.password);
+    setError("");
   };
 
   return (
@@ -45,6 +70,32 @@ const Login = () => {
         </CardHeader>
         
         <CardContent>
+          <div className="mb-6">
+            <Alert>
+              <AlertDescription>
+                <strong>Demo Credentials:</strong>
+                <div className="grid grid-cols-1 gap-2 mt-2">
+                  {DEMO_CREDENTIALS.map((cred, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      className="justify-start text-xs h-8"
+                      onClick={() => fillDemoCredentials(cred)}
+                    >
+                      {cred.role}: {cred.email}
+                    </Button>
+                  ))}
+                </div>
+              </AlertDescription>
+            </Alert>
+          </div>
+
+          {error && (
+            <Alert className="mb-4" variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
