@@ -92,21 +92,10 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-background">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <DashboardHeader 
-            memberName={memberData.name}
-            membershipId={memberData.membershipId}
-          />
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleLogout}
-            className="flex items-center gap-2"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
-        </div>
+        <DashboardHeader 
+          memberName={memberData.name}
+          membershipId={memberData.membershipId}
+        />
         
         {/* Financial Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
