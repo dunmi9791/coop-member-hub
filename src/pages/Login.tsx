@@ -1,0 +1,123 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Eye, EyeOff } from "lucide-react";
+// Using placeholder for logo - you can upload your NLNG COOP logo to src/assets/
+
+const Login = () => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    // TODO: Integrate with Odoo backend
+    console.log("Login attempt:", { email, password });
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-background p-4">
+      <Card className="w-full max-w-md shadow-elevated">
+        <CardHeader className="space-y-6 text-center">
+          <div className="flex justify-center">
+            <div className="h-16 w-16 bg-gradient-primary rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-lg">NLNG</span>
+            </div>
+          </div>
+          <div>
+            <CardTitle className="text-2xl font-bold text-foreground">
+              Welcome Back
+            </CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Sign in to your cooperative account
+            </CardDescription>
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="h-11"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="h-11 pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-11 px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center space-x-2 text-sm cursor-pointer">
+                <input type="checkbox" className="rounded border-input" />
+                <span>Remember me</span>
+              </Label>
+              <Button variant="link" className="px-0 font-normal text-sm">
+                Forgot password?
+              </Button>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full h-11 bg-gradient-primary"
+              disabled={isLoading}
+            >
+              {isLoading ? "Signing in..." : "Sign In"}
+            </Button>
+          </form>
+          
+          <div className="mt-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Button variant="link" className="px-0 font-normal">
+                Contact your cooperative
+              </Button>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default Login;
