@@ -51,7 +51,7 @@ export function ActionButton({
       <div className="space-y-1">
         <h3 className="font-semibold text-lg leading-tight">{title}</h3>
         <p className={cn(
-          "text-sm leading-relaxed",
+          "text-sm leading-relaxed break-words whitespace-normal",
           variant === "secondary" ? "text-muted-foreground" : "opacity-75"
         )}>
           {description}
