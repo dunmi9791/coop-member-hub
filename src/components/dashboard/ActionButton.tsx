@@ -49,7 +49,12 @@ export function ActionButton({
         {icon}
       </div>
       <div className="space-y-1">
-        <h3 className="font-semibold text-lg leading-tight">{title}</h3>
+        <h3  className={cn(
+    "font-semibold text-lg leading-tight",
+    variant === "secondary"
+      ? "text-foreground hover:text-foreground"
+      : "text-primary-foreground hover:text-primary-foreground"
+  )}>{title}</h3>
         <p className={cn(
           "text-sm leading-relaxed break-words whitespace-normal",
           variant === "secondary" ? "text-muted-foreground" : "opacity-75"

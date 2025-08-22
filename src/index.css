@@ -125,3 +125,80 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+.active-selector{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: fit-content;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 400;
+  width: fit-content;
+  height: 43px;
+  padding-inline: 10px;
+  border-radius: 5px 5px 0 0;
+  text-decoration: none;
+}
+.inactive{
+  color: #4d4d4d;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.input-container{
+  display: flex;
+    flex-direction: column;
+    gap: 5px;
+  input, select{
+    height: 3.2rem;
+    border-radius: 12px;
+    background-color: #F7F7F7;
+    border: 0;
+    padding-inline: 10px;
+    outline: none;
+}
+input[type='file']{
+      background-color: #ffff !important;
+}
+textarea{
+  border-radius: 12px;
+  background-color: #F7F7F7;
+  border: 0;
+  padding-inline: 10px;
+  outline: none;
+  height: 5rem;
+}
+input:focus, select:focus, textarea:focus{
+  outline: solid 1px #1985B3;
+}
+
+label{
+  font-size: 14px;
+  color: #4D4D4D;
+  font-weight: 400;
+}
+}
+
+.selected-items-container{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    row-gap: 1rem;
+    column-gap: 2rem;
+    .card:hover{
+        background-color: #f4fAfd;
+        border: solid 1px #4CB8E6 !important;
+    }
+}
+
+.selected-items-container input, .selected-items-container select{
+    outline-width: 0.2px;
+    border: none !important;
+    font-size: 14px !important;
+    width: 100%;
+}
+
+@media screen and (max-width: 480px) {
+    .selected-items-container{
+        grid-template-columns: 1fr;
+    }
+}

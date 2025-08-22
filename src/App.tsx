@@ -9,6 +9,11 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Savings from "./pages/Savings";
 import NotFound from "./pages/NotFound";
+import Loans from "./pages/LoanManagement/Loans";
+import Investments from "./pages/Investments";
+import Statements from "./pages/Statements";
+import LoanApplication from "./pages/LoanManagement/LoanApplication";
+import LoanCalculator from "./pages/LoanManagement/LoanCalculator";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +53,12 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/savings" element={<Savings />} />
+            <Route path="/loans" element={<Loans />}>
+            <Route index element={<LoanCalculator/>}/>
+            <Route path='apply-for-loan' element={<LoanApplication/>}/>
+            </Route>
+            <Route path="/investments" element={<Investments />} />
+            <Route path="/statements" element={<Statements />} />
             <Route path="/login" element={<Login />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
