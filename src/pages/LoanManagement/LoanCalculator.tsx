@@ -44,23 +44,22 @@ const totalInterest = schedules?.reduce(
   }
 
   return (
-    <div>
-        LoanCalculator
+    <>
 <form>
-        <div className="rounded-4 mt-3" style={{ border: "solid 1px #f7f4f7" }}>
+        <div className="mt-3 border rounded-[18px] border-[#043d73]" >
           <div
-            className="p-3 form-header bg-[#f4fAfd] rounded"
+            className="p-3 form-header bg-[#043d73] rounded-t-[18px]"
             style={{
               backgroundColor: "",
               borderRadius: "15px 15px 0 0",
             }}
           >
-            <div className="subtitle">Loan calculator</div>
+            <div className="subtitle text-white">Loan calculator</div>
           </div>
-          <div className="selected-items-container p-3">
+          <div className="selected-items-container p-3 py-5">
             <div className="input-container">
               <label htmlFor="loanProduct">
-                Loan product<sup className="text-danger">*</sup>
+                Loan product<sup className="text-red-700">*</sup>
               </label>
               <select
                 name="product"
@@ -77,7 +76,7 @@ const totalInterest = schedules?.reduce(
             </div>
             <div className="input-container">
               <label htmlFor="loanAmount">
-                Loan amount<sup className="text-danger">*</sup>
+                Loan amount<sup className="text-red-700">*</sup>
               </label>
               {/* <NumericFormat */}
                 {/* // thousandSeparator={true}
@@ -87,11 +86,12 @@ const totalInterest = schedules?.reduce(
                 name="loanAmount"
                 required
                 onChange={handleChange}
+                type='number'
               />
             </div>
             <div className="input-container">
               <label htmlFor="frequency">
-                Frequency<sup className="text-danger">*</sup>
+                Frequency<sup className="text-red-700">*</sup>
               </label>
               <select
                 name="frequency"
@@ -108,13 +108,13 @@ const totalInterest = schedules?.reduce(
             </div>
             <div className="input-container">
                 <label htmlFor="duration">
-                  Loan duration (months)<sup className="text-danger">*</sup>{" "}
+                  Loan duration (months)<sup className="text-red-700">*</sup>{" "}
                 </label>
               <input type="number" name="duration" onChange={handleChange} value={input?.duration}/>
             </div>
             <div className="input-container">
               <label htmlFor="interestRate">
-                Interest rate<sup className="text-danger">*</sup>
+                Interest rate<sup className="text-red-700">*</sup>
               </label>
               <input
                 type="text"
@@ -126,7 +126,7 @@ const totalInterest = schedules?.reduce(
             </div>
             <div className="input-container">
               <label htmlFor="interestLoanAmount">
-                Loan amount upon interest<sup className="text-danger">*</sup>
+                Loan amount upon interest<sup className="text-red-700">*</sup>
               </label>
               {/* <NumericFormat
                 thousandSeparator={true}
@@ -146,32 +146,21 @@ const totalInterest = schedules?.reduce(
           </div>
         </div>
         {/* Loan repayment breakdown */}
-        <div className="rounded-4 mt-3" style={{ border: "solid 1px #f7f4f7" }}>
+        <div className="rounded-[18px] border-[#043d73] border  mt-10">
           <div
-            className="p-3 form-header"
-            style={{
-              backgroundColor: "#f4fAfd",
-              borderRadius: "15px 15px 0 0",
-            }}
+            className="p-3 form-header bg-[#043d73]  rounded-t-[15px]"
           >
-            <div className="subtitle">
+            <div className="subtitle text-white">
               Loan application /Loan repayment breakdown
             </div>
           </div>
           <div className="p-3">
             <div className="selected-items-container">
               <div
-                className="rounded-4 mt-3"
-                style={{ border: "solid 1px #f7f4f7" }}
-              >
+                className="rounded-[16px] mt-3 border border-[#043d73] bg-[#fff]">
                 <div
-                  className="p-3 form-header"
-                  style={{
-                    backgroundColor: "#f4fAfd",
-                    borderRadius: "15px 15px 0 0",
-                  }}
-                >
-                  <div className="subtitle">Loan repayment breakdown</div>
+                  className="p-3 form-header  bg-[#043d73] rounded-t-[15px]">
+                  <div className="subtitle text-white">Loan repayment breakdown</div>
                 </div>
                 <div className="p-3 d-flex flex-column gap-3">
                   {schedules?.map((schedule, i) => {
@@ -218,7 +207,7 @@ const totalInterest = schedules?.reduce(
           </div>
         </div>
       </form>
-    </div>
+    </>
   )
 }
 

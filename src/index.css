@@ -152,17 +152,18 @@ All colors MUST be HSL.
   input, select{
     height: 3.2rem;
     border-radius: 12px;
-    background-color: #F7F7F7;
+    background-color: #f7f7f7 !important;
     border: 0;
     padding-inline: 10px;
     outline: none;
+    
 }
-input[type='file']{
+/* input[type='file']{
       background-color: #ffff !important;
-}
+} */
 textarea{
   border-radius: 12px;
-  background-color: #F7F7F7;
+  background-color: #4d4d4d;
   border: 0;
   padding-inline: 10px;
   outline: none;
@@ -201,4 +202,19 @@ label{
     .selected-items-container{
         grid-template-columns: 1fr;
     }
+}
+
+.apply-btn{
+  background-color: #043d73;
+  color: #fff;
+  padding: 10px 25px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+.discard-btn{
+    background-color: #f7f7f7;
+  color: #000;
+  padding: 10px 25px;
+  border-radius: 10px;
+  font-size: 14px;
 }

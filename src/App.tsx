@@ -10,10 +10,19 @@ import Login from "./pages/Login";
 import Savings from "./pages/Savings";
 import NotFound from "./pages/NotFound";
 import Loans from "./pages/LoanManagement/Loans";
-import Investments from "./pages/Investments";
+import Investments from "./pages/InvestmentManagement/Investments";
 import Statements from "./pages/Statements";
 import LoanApplication from "./pages/LoanManagement/LoanApplication";
 import LoanCalculator from "./pages/LoanManagement/LoanCalculator";
+import SharesPortfolio from "./pages/InvestmentManagement/SharesPortfolio";
+import SharesWithdrawalRequests from "./pages/InvestmentManagement/SharesWithdrawalRequests";
+import SharesPurchaseRequests from "./pages/InvestmentManagement/SharesPurchaseRequests";
+import ViewShare from "./pages/InvestmentManagement/ViewShare";
+import SharesPurchase from "./pages/InvestmentManagement/SharesPurchase";
+import BoughtShares from "./pages/InvestmentManagement/BoughtShares";
+import BuyShares from "./pages/InvestmentManagement/BuyShares";
+import InvestmentWithdrawals from "./pages/InvestmentManagement/InvestmentWithdrawals";
+import WithdrawInvestment from "./pages/InvestmentManagement/WithdrawInvestment";
 
 const queryClient = new QueryClient();
 
@@ -57,7 +66,20 @@ const App = () => (
             <Route index element={<LoanCalculator/>}/>
             <Route path='apply-for-loan' element={<LoanApplication/>}/>
             </Route>
-            <Route path="/investments" element={<Investments />} />
+            <Route path="/investments" element={<Investments />} >
+            <Route path="/investments" element={<SharesPortfolio/>}>
+            <Route index element={<BoughtShares/>}/>
+            <Route path="invest" element={<BuyShares/>}/>
+            </Route>
+            <Route path="investment-withdrawal" element={<InvestmentWithdrawals/>}>
+            <Route index element={<SharesWithdrawalRequests/>}/>
+            <Route path="withdraw-investment" element={<WithdrawInvestment/>}/>
+            </Route>
+            <Route path="investment-purchase" element={<SharesPurchase/>}>
+            <Route index element={<SharesPurchaseRequests/>}/>
+            <Route path="view-investment" element={<ViewShare/>}/>
+            </Route>
+            </Route>
             <Route path="/statements" element={<Statements />} />
             <Route path="/login" element={<Login />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
