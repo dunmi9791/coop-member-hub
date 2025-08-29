@@ -218,3 +218,59 @@ label{
   border-radius: 10px;
   font-size: 14px;
 }
+
+.contact-container{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+}
+.contact-card{
+    background-color: #fafafa;
+    padding: 20px 15px;
+    border-radius: 15px;
+    h4{
+        font-weight: 700;
+        font-size: 22px;
+    }
+    .icon{
+        color: #79CAEC;
+    }
+}
+
+.faq-header{
+    font-weight: 700;
+    font-size: 28px;
+    color: #0d0d0d;
+    text-align: center;
+}
+
+
+
+@media screen and (max-width: 768px){
+    .contact-container{
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media screen and (max-width: 480px){
+    .contact-container{
+        grid-template-columns: 1fr;
+    }
+}
+
+.section-name{
+    cursor: pointer;
+    background-color: #fafafa;
+    padding: 8px 10px;
+    border-radius: 18px;
+    font-size: 14px;
+}
+
+.active-section-name{
+    background-color: #4CB8E6;
+    color: #fff;
+    font-size: 14px;
+    padding: 8px 10px;
+    border-radius: 18px;
+    cursor: pointer;
+}

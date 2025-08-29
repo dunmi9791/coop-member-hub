@@ -47,7 +47,7 @@ const totalInterest = schedules?.reduce(
   return (
     <>
 <form>
-        <div className="mt-3 border rounded-[18px] border-[#043d73] bg-[#fff]" >
+        <div className="mt-3 border  rounded-[18px] border-[#043d73] bg-[#fff]" >
           <div
             className="p-3 form-header bg-[#043d73] rounded-t-[18px]"
             style={{
@@ -57,7 +57,7 @@ const totalInterest = schedules?.reduce(
           >
             <div className="subtitle text-white">Loan application</div>
           </div>
-          <div className="selected-items-container p-3 py-5">
+          <div className="selected-items-container px-4 py-5">
             <div className="input-container">
               <label htmlFor="loanProduct">
                 Loan product<sup className="text-red-700">*</sup>
@@ -147,7 +147,7 @@ const totalInterest = schedules?.reduce(
           </div>
         </div>
         {/* Loan repayment breakdown */}
-        <div className="rounded-[18px] border-[#043d73] border  mt-10">
+        <div className="rounded-[18px] border-[#043d73] border bg-white mt-10">
           <div
             className="p-3 form-header bg-[#043d73]  rounded-t-[15px]"
           >

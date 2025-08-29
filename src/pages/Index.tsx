@@ -147,7 +147,7 @@ const Index = () => {
             description="Quick and easy loan application process with competitive rates"
             icon={<Plus className="h-6 w-6" />}
             variant="primary"
-            onClick={() => console.log("Navigate to loan application")}
+            onClick={() => navigate('/loans/apply-for-loan')}
           />
           
           <ActionButton
@@ -163,7 +163,7 @@ const Index = () => {
             description="Download or view your financial statements and transaction history"
             icon={<FileText className="h-6 w-6" />}
             variant="secondary"
-            onClick={() => console.log("Navigate to statements")}
+            onClick={() => navigate('/statements')}
           />
         </div>
 

@@ -11,7 +11,7 @@ import Savings from "./pages/Savings";
 import NotFound from "./pages/NotFound";
 import Loans from "./pages/LoanManagement/Loans";
 import Investments from "./pages/InvestmentManagement/Investments";
-import Statements from "./pages/Statements";
+import Statements from "./pages/Statements/Statements";
 import LoanApplication from "./pages/LoanManagement/LoanApplication";
 import LoanCalculator from "./pages/LoanManagement/LoanCalculator";
 import SharesPortfolio from "./pages/InvestmentManagement/SharesPortfolio";
@@ -23,6 +23,13 @@ import BoughtShares from "./pages/InvestmentManagement/BoughtShares";
 import BuyShares from "./pages/InvestmentManagement/BuyShares";
 import InvestmentWithdrawals from "./pages/InvestmentManagement/InvestmentWithdrawals";
 import WithdrawInvestment from "./pages/InvestmentManagement/WithdrawInvestment";
+import SavingStatement from "./pages/Statements/SavingStatement";
+import LoanStatement from "./pages/Statements/LoanStatement";
+import MemberProfile from "./pages/Profile";
+import Settings from "./pages/Settings";
+import Help from "./pages/Help/Help";
+import ContactUs from "./pages/Help/ContactUs";
+import Faqs from "./pages/Help/Faqs";
 
 const queryClient = new QueryClient();
 
@@ -80,7 +87,16 @@ const App = () => (
             <Route path="view-investment" element={<ViewShare/>}/>
             </Route>
             </Route>
-            <Route path="/statements" element={<Statements />} />
+            <Route path="/statements" element={<Statements />} >
+            <Route index element={<SavingStatement/>}/>
+            <Route path="loan-statement" element={<LoanStatement/>}/>
+            </Route>
+            <Route path="/profile" element={<MemberProfile/>}/>
+            <Route path="/settings" element={<Settings/>}/>
+            <Route path="/help" element={<Help/>}>
+            <Route index element={<ContactUs/>}/>
+            <Route path="faqs" element={<Faqs/>}/>
+            </Route>
             <Route path="/login" element={<Login />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
