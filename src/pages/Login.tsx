@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,13 +6,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff } from "lucide-react";
+import api from "@/hooks/api";
+import { UserContext } from "@/hooks/AuthContext";
+import { toast } from "sonner";
+
 // Using placeholder for logo - you can upload your NLNG COOP logo to src/assets/
 
-const DEMO_CREDENTIALS = [
-  { email: "member@nlng.coop", password: "demo123", role: "Member" },
-  { email: "admin@nlng.coop", password: "admin123", role: "Admin" },
-  { email: "officer@nlng.coop", password: "officer123", role: "Loan Officer" }
-];
+// const DEMO_CREDENTIALS = [
+//   { email: "member@nlng.coop", password: "demo123", role: "Member" },
+//   { email: "admin@nlng.coop", password: "admin123", role: "Admin" },
+//   { email: "officer@nlng.coop", password: "officer123", role: "Loan Officer" }
+// ];
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,34 +25,49 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const {setCredentials} =useContext(UserContext)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
-    
-    // Check demo credentials
-    const user = DEMO_CREDENTIALS.find(
-      cred => cred.email === email && cred.password === password
-    );
-    
-    setTimeout(() => {
-      if (user) {
-        // Store user info in localStorage for demo purposes
-        localStorage.setItem('demoUser', JSON.stringify(user));
-        navigate('/');
-      } else {
-        setError("Invalid credentials. Try demo@nlng.coop / demo123");
-      }
+    const payload ={
+    jsonrpc: "2.0",
+    method: "call",
+    params: {
+        db: "ngml_corp",
+        login: email, 
+        password: password,
+        context: {}
+    }
+}
+    try {
+      const resp = await api.post('web/session/authenticate', payload)
+      console.log(resp)
+      sessionStorage.setItem('user', JSON.stringify(resp.data));
+      navigate('/');
       setIsLoading(false);
-    }, 1000);
+    } catch (error) {
+      setIsLoading(false)
+        if (error?.response?.status === 400) {
+        toast(error.response.data.message)
+      }else if (error) {
+        toast(error.message)
+      }
+    }
+    // // Check demo credentials
+    // const user = DEMO_CREDENTIALS.find(
+    //   cred => cred.email === email && cred.password === password
+    // );
+    
+        // Store user info in localStorage for demo purposes
+       
   };
 
-  const fillDemoCredentials = (credentials: typeof DEMO_CREDENTIALS[0]) => {
-    setEmail(credentials.email);
-    setPassword(credentials.password);
-    setError("");
-  };
+  // const fillDemoCredentials = (credentials: typeof DEMO_CREDENTIALS[0]) => {
+  //   setEmail(credentials.email);
+  //   setPassword(credentials.password);
+  //   setError("");
+  // };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-background p-4">
@@ -70,7 +89,7 @@ const Login = () => {
         </CardHeader>
         
         <CardContent>
-          <div className="mb-6">
+          {/* <div className="mb-6">
             <Alert>
               <AlertDescription>
                 <strong>Demo Credentials:</strong>
@@ -89,13 +108,8 @@ const Login = () => {
                 </div>
               </AlertDescription>
             </Alert>
-          </div>
+          </div>*/}
 
-          {error && (
-            <Alert className="mb-4" variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
