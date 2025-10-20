@@ -4,12 +4,12 @@ import { env } from "process";
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL, 
   timeout: 10000,
-  headers: {
+   headers: {
     "Content-Type": "application/json",
+    Accept: "application/json",
   },
-});
+ });
 
-// ✅ Add interceptor (optional: for attaching token)
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");

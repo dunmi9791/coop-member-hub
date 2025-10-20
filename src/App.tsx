@@ -1,9 +1,12 @@
+
+
+import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -33,13 +36,12 @@ import Faqs from "./pages/Help/Faqs";
 
 const queryClient = new QueryClient();
 
+// ✅ Layout component
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const isLoginPage = location.pathname === '/login';
+  const isLoginPage = location.pathname === "/";
 
-  if (isLoginPage) {
-    return <>{children}</>;
-  }
+  if (isLoginPage) return <>{children}</>;
 
   return (
     <SidebarProvider>
@@ -50,61 +52,94 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             <SidebarTrigger />
             <h1 className="ml-4 font-semibold">NLNG Cooperative Portal</h1>
           </header>
-          <main className="flex-1 overflow-auto">
-            {children}
-          </main>
+          <main className="flex-1 overflow-auto">{children}</main>
         </div>
       </div>
     </SidebarProvider>
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/savings" element={<Savings />} />
-            <Route path="/loans" element={<Loans />}>
-            <Route index element={<LoanCalculator/>}/>
-            <Route path='apply-for-loan' element={<LoanApplication/>}/>
-            </Route>
-            <Route path="/investments" element={<Investments />} >
-            <Route path="/investments" element={<SharesPortfolio/>}>
-            <Route index element={<BoughtShares/>}/>
-            <Route path="invest" element={<BuyShares/>}/>
-            </Route>
-            <Route path="investment-withdrawal" element={<InvestmentWithdrawals/>}>
-            <Route index element={<SharesWithdrawalRequests/>}/>
-            <Route path="withdraw-investment" element={<WithdrawInvestment/>}/>
-            </Route>
-            <Route path="investment-purchase" element={<SharesPurchase/>}>
-            <Route index element={<SharesPurchaseRequests/>}/>
-            <Route path="view-investment" element={<ViewShare/>}/>
-            </Route>
-            </Route>
-            <Route path="/statements" element={<Statements />} >
-            <Route index element={<SavingStatement/>}/>
-            <Route path="loan-statement" element={<LoanStatement/>}/>
-            </Route>
-            <Route path="/profile" element={<MemberProfile/>}/>
-            <Route path="/settings" element={<Settings/>}/>
-            <Route path="/help" element={<Help/>}>
-            <Route index element={<ContactUs/>}/>
-            <Route path="faqs" element={<Faqs/>}/>
-            </Route>
-            <Route path="/login" element={<Login />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AppLayout>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+// Route protection
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+  const user = sessionStorage.getItem("user");
+  return user ? children : <Navigate to="/" replace />;
+};
+
+const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const user = sessionStorage.getItem("user");
+    setIsAuthenticated(!!user);
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppLayout>
+            <Routes>
+              {/* Login Route */}
+              <Route
+                path="/"
+                element={<Login/>}
+              />
+
+              {/* Protected Routes */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/savings"
+                element={
+                  <ProtectedRoute>
+                    <Savings />
+                  </ProtectedRoute>
+                }
+              />
+
+                <Route path="/dashboard/loans" element={<Loans />}>
+             <Route index element={<LoanCalculator/>}/>
+             <Route path='apply-for-loan' element={<LoanApplication/>}/>
+             </Route>
+             <Route path="/dashboard/investments" element={<Investments />} >
+             <Route path="/dashboard/investments" element={<SharesPortfolio/>}>
+             <Route index element={<BoughtShares/>}/>
+             <Route path="invest" element={<BuyShares/>}/>
+             </Route>
+             <Route path="investment-withdrawal" element={<InvestmentWithdrawals/>}>
+             <Route index element={<SharesWithdrawalRequests/>}/>
+             <Route path="withdraw-investment" element={<WithdrawInvestment/>}/>
+             </Route>
+             <Route path="investment-purchase" element={<SharesPurchase/>}>
+             <Route index element={<SharesPurchaseRequests/>}/>
+             <Route path="view-investment" element={<ViewShare/>}/>
+             </Route>
+             </Route>
+             <Route path="/dashboard/statements" element={<Statements />} >
+             <Route index element={<SavingStatement/>}/>
+             <Route path="loan-statement" element={<LoanStatement/>}/>
+             </Route>
+             <Route path="/dashboard/profile" element={<MemberProfile/>}/>
+             <Route path="/dashboard/settings" element={<Settings/>}/>
+             <Route path="/dashboard/help" element={<Help/>}>
+             <Route index element={<ContactUs/>}/>
+             <Route path="faqs" element={<Faqs/>}/>
+           </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AppLayout>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

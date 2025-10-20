@@ -8,6 +8,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+     proxy: {
+      '/odoo': {
+        target: 'http://41.78.157.36:8069', 
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/odoo/, ''),
+      },
+    },
   },
   plugins: [
     react(),

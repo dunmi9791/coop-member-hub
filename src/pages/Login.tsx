@@ -38,13 +38,12 @@ const Login = () => {
         login: email, 
         password: password,
         context: {}
-    }
+    },
 }
     try {
-      const resp = await api.post('web/session/authenticate', payload)
-      console.log(resp)
+      const resp = await api.post('/odoo/web/session/authenticate', payload)
       sessionStorage.setItem('user', JSON.stringify(resp.data));
-      navigate('/');
+      navigate('/dashboard');
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false)

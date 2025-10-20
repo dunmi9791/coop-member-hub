@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 interface FinancialCardProps {
   title: string;
-  amount: string;
+  amount: number;
   subtitle?: string;
   icon: ReactNode;
   variant?: "default" | "success" | "warning" | "accent";

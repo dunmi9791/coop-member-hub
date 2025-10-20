@@ -8,6 +8,7 @@ interface DashboardHeaderProps {
   membershipId: string;
 }
 
+const today = new Date()
 export function DashboardHeader({ memberName, membershipId }: DashboardHeaderProps) {
   return (
     <div className="relative overflow-hidden rounded-2xl bg-gradient-primary text-primary-foreground mb-8">
@@ -20,7 +21,7 @@ export function DashboardHeader({ memberName, membershipId }: DashboardHeaderPro
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16 ring-4 ring-white/20">
               <AvatarFallback className="bg-white/20 text-lg font-semibold">
-                {memberName.split(' ').map(n => n[0]).join('')}
+                {memberName?.split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -53,12 +54,13 @@ export function DashboardHeader({ memberName, membershipId }: DashboardHeaderPro
             <p className="text-lg font-semibold">January 2020</p>
           </div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-primary-foreground/70 text-sm">Active Products</p>
-            <p className="text-lg font-semibold">3 Services</p>
+            <p className="text-primary-foreground/70 text-sm">Last Contribution</p>
+            <p className="text-lg font-semibold">₦50,000</p>
+            <span>25/08/2025</span>
           </div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-primary-foreground/70 text-sm">Credit Score</p>
-            <p className="text-lg font-semibold">Excellent</p>
+            <p className="text-primary-foreground/70 text-sm">Role</p>
+            <p className="text-lg font-semibold">Accountant</p>
           </div>
         </div>
       </div>

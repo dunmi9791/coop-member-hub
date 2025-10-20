@@ -9,9 +9,9 @@ const {pathname} = useLocation()
             <h1 className="text-3xl font-bold text-foreground">Help Center</h1>
           </div>
           <div className="flex gap-4 items-center">
-          <Link to='' className={ pathname === '/help' ? 'bg-gradient-primary active-selector' : 'inactive'}>
+          <Link to='' className={ pathname === '/dashboard/help' ? 'bg-gradient-primary active-selector' : 'inactive'}>
           Contact us</Link>
-          <Link to='faqs' className={ pathname === '/help/faqs' ? 'bg-gradient-primary active-selector'
+          <Link to='faqs' className={ pathname === '/dashboard/help/faqs' ? 'bg-gradient-primary active-selector'
              : 'inactive'}>FAQs</Link>
         </div>
         <Outlet/>

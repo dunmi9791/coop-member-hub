@@ -1,3 +1,5 @@
+import api from '@/hooks/api';
+import axios from 'axios';
 import React, {useState, useEffect} from 'react'
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
@@ -43,9 +45,16 @@ const totalInterest = schedules?.reduce(
     return suffixes[(value - 20) % 10] || suffixes[value] || suffixes[0];
   }
 
+  const fetchProducts = async()=>{
+    await api('/odoo/api/portal/loan_types').then(resp=>setProducts(resp.data))
+  }
+useEffect(()=>{
+fetchProducts()
+}, [])
+
   return (
     <>
-<form>
+    <form>
         <div className="mt-3 border bg-white rounded-[18px] border-[#043d73]" >
           <div
             className="p-3 form-header bg-[#043d73] rounded-t-[18px]"

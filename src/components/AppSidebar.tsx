@@ -28,17 +28,17 @@ import {
 import { Button } from "@/components/ui/button";
 
 const mainItems = [
-  { title: "Dashboard", url: "/", icon: Home },
-  { title: "Savings", url: "/savings", icon: Wallet },
-  { title: "Loans", url: "/loans", icon: CreditCard },
-  { title: "Investments", url: "/investments", icon: TrendingUp },
-  { title: "Statements", url: "/statements", icon: FileText },
+  { title: "Dashboard", url: "/dashboard", icon: Home },
+  { title: "Savings", url: "/dashboard/savings", icon: Wallet },
+  { title: "Loans", url: "/dashboard/loans", icon: CreditCard },
+  { title: "Investments", url: "/dashboard/investments", icon: TrendingUp },
+  { title: "Statements", url: "/dashboard/statements", icon: FileText },
 ];
 
 const accountItems = [
-  { title: "Profile", url: "/profile", icon: User },
-  { title: "Settings", url: "/settings", icon: Settings },
-  { title: "Help", url: "/help", icon: HelpCircle },
+  { title: "Profile", url: "/dashboard/profile", icon: User },
+  { title: "Settings", url: "/dashboard/settings", icon: Settings },
+  { title: "Help", url: "/dashboard/help", icon: HelpCircle },
 ];
 
 export function AppSidebar() {
@@ -53,8 +53,8 @@ export function AppSidebar() {
     isActive ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : "hover:bg-sidebar-accent/50";
 
   const handleLogout = () => {
-    localStorage.removeItem('demoUser');
-    navigate('/login');
+    sessionStorage.removeItem('user');
+    navigate('/');
   };
 
   return (

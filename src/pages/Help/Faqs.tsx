@@ -72,9 +72,9 @@ const Faqs = () => {
   const [openId, setOpenId] = useState(null);
 
   return (
-    <div className="mt-4 space-y-6">
+    <div className="mt-4 space-y-6 bg-white p-10 rounded-lg">
       {faqsData.map(section => (
-        <div key={section.id} className="border rounded-lg">
+        <div key={section.id} className="border rounded-t-[16px]">
           <h3 className="bg-[#043d73] text-white rounded-t-[16px] px-4 py-2 font-semibold">{section.sectionName}</h3>
           {section.faqQuestions.map(faq => (
             <div key={faq.id} className="border-t">

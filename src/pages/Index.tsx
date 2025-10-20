@@ -20,29 +20,59 @@ import { ActivityItem } from "@/components/dashboard/ActivityItem";
 import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import api from "@/hooks/api";
+
+export interface MemberDashboardResponse {
+  member: {
+    id: number;
+    name: string;
+    member_id: string;
+    member_since: string; // ISO date string
+  };
+  savings: {
+    total_balance: number;
+    primary_account_number: string;
+  };
+  loans: {
+    outstanding_loans: number;
+    items: LoanItem[];
+  };
+  investments: {
+    total_investment: number;
+  };
+}
+
+export interface LoanItem {
+  loan_id: number;
+  loan_name: string;
+  loan_type: string;
+  loan_balance: number;
+  next_payment: {
+    due_date: string; // ISO date string
+    amount: number;
+  };
+}
 
 const Index = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const [details, setDetails] = useState<MemberDashboardResponse | null>(null)
 
   useEffect(() => {
-    // Check if user is logged in via demo credentials
-    const demoUser = localStorage.getItem('demoUser');
+    const demoUser = sessionStorage.getItem('user');
     if (!demoUser) {
-      navigate('/login');
+      navigate('/');
       return;
     }
     setUser(JSON.parse(demoUser));
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('demoUser');
-    navigate('/login');
+    localStorage.removeItem('user');
+    navigate('/');
   };
 
-  if (!user) {
-    return <div>Loading...</div>;
-  }
+ 
   const memberData = {
     name: user?.role === "Admin" ? "Admin User" : user?.role === "Loan Officer" ? "John Okafor" : "Sarah Adebayo",
     membershipId: user?.role === "Admin" ? "ADM-2020-0001" : user?.role === "Loan Officer" ? "OFF-2020-1002" : "MEM-2020-4521",
@@ -53,6 +83,20 @@ const Index = () => {
       { name: "Cooperative Shares", amount: "₦150,000", growth: "+8%" }
     ]
   };
+
+  const fetchMemberDetails= async()=>{
+    await api.post('/odoo/api/portal/dashboard', {}, {headers:{
+    }}).then(resp=>setDetails(resp?.data?.result))
+  }
+
+  useEffect(()=>{
+fetchMemberDetails()
+  }, [])
+
+console.log(details)
+   if (!user) {
+    return <div>Loading...</div>;
+  }
 
   const recentActivities = [
     {
@@ -93,15 +137,15 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-background">
       <div className="container mx-auto px-4 py-8">
         <DashboardHeader 
-          memberName={memberData.name}
-          membershipId={memberData.membershipId}
+          memberName={details?.member?.name}
+          membershipId={details?.member?.member_id}
         />
         
         {/* Financial Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <FinancialCard
             title="Your Savings"
-            amount={memberData.savingsBalance}
+            amount={details?.savings?.total_balance}
             subtitle="Available balance"
             icon={<Wallet className="h-5 w-5" />}
             variant="success"
@@ -110,7 +154,7 @@ const Index = () => {
           
           <FinancialCard
             title="Outstanding Loan"
-            amount={memberData.loanBalance}
+            amount={details?.loans?.outstanding_loans}
             subtitle="Next payment: ₦15,000 due Dec 15"
             icon={<CreditCard className="h-5 w-5" />}
             variant="warning"
@@ -118,7 +162,7 @@ const Index = () => {
           
           <FinancialCard
             title="Total Investments"
-            amount="₦450,000"
+            amount={details?.investments?.total_investment}
             subtitle="Current portfolio value"
             icon={<TrendingUp className="h-5 w-5" />}
             variant="accent"
@@ -147,7 +191,7 @@ const Index = () => {
             description="Quick and easy loan application process with competitive rates"
             icon={<Plus className="h-6 w-6" />}
             variant="primary"
-            onClick={() => navigate('/loans/apply-for-loan')}
+            onClick={() => navigate('/dashboard/loans/apply-for-loan')}
           />
           
           <ActionButton
@@ -163,7 +207,7 @@ const Index = () => {
             description="Download or view your financial statements and transaction history"
             icon={<FileText className="h-6 w-6" />}
             variant="secondary"
-            onClick={() => navigate('/statements')}
+            onClick={() => navigate('/dashboard/statements')}
           />
         </div>
 
