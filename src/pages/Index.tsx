@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Wallet, 
@@ -21,6 +21,7 @@ import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import api from "@/hooks/api";
+import { UserContext } from "@/hooks/AuthContext";
 
 export interface MemberDashboardResponse {
   member: {
@@ -40,6 +41,15 @@ export interface MemberDashboardResponse {
   investments: {
     total_investment: number;
   };
+    recent_activities: RecentActivity[];
+}
+
+export interface RecentActivity {
+  type: "loan_disbursement" | "contribution" | string;
+  date: string;
+  amount: number;
+  description: string;
+  reference: string;
 }
 
 export interface LoanItem {
@@ -56,7 +66,7 @@ export interface LoanItem {
 const Index = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
-  const [details, setDetails] = useState<MemberDashboardResponse | null>(null)
+const {details, setDetails} =useContext(UserContext)
 
   useEffect(() => {
     const demoUser = sessionStorage.getItem('user');
@@ -66,11 +76,6 @@ const Index = () => {
     }
     setUser(JSON.parse(demoUser));
   }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    navigate('/');
-  };
 
  
   const memberData = {
@@ -93,45 +98,53 @@ const Index = () => {
 fetchMemberDetails()
   }, [])
 
-console.log(details)
    if (!user) {
     return <div>Loading...</div>;
   }
 
-  const recentActivities = [
-    {
-      type: "deposit" as const,
-      title: "Monthly Savings Deposit",
-      description: "Automatic savings contribution",
-      amount: "+₦50,000",
-      time: "2 days ago",
-      icon: <ArrowUpRight className="h-4 w-4" />
-    },
-    {
-      type: "loan" as const,
-      title: "Loan Payment Made",
-      description: "Monthly loan installment",
-      amount: "-₦15,000",
-      time: "5 days ago",
-      icon: <ArrowDownRight className="h-4 w-4" />
-    },
-    {
-      type: "investment" as const,
-      title: "Investment Return",
-      description: "Agricultural bond quarterly return",
-      amount: "+₦9,000",
-      time: "1 week ago",
-      icon: <TrendingUp className="h-4 w-4" />
-    },
-    {
-      type: "withdrawal" as const,
-      title: "Emergency Withdrawal",
-      description: "Partial savings withdrawal",
-      amount: "-₦25,000",
-      time: "2 weeks ago",
-      icon: <ArrowDownRight className="h-4 w-4" />
+const recentActivities =
+  details?.recent_activities?.map((activity) => {
+    let icon;
+    let uiType: "contribution" | "withdrawal" | "loan_disbursement" | "investment";
+    let title = "";
+    let sign = "+";
+    
+    switch (activity.type) {
+      case "loan_disbursement":
+        icon = <ArrowUpRight className="h-4 w-4 text-green-600" />;
+        uiType = "loan_disbursement";
+        title = "Loan Disbursement";
+        break;
+
+      case "contribution":
+        icon = <ArrowUpRight className="h-4 w-4 text-blue-600" />;
+        uiType = "contribution";
+        title = "Contribution";
+        break;
+
+      default:
+        icon = <TrendingUp className="h-4 w-4 text-gray-500" />;
+        uiType = "investment";
+        title = activity.type.replace(/_/g, " ");
     }
-  ];
+
+    const formattedDate = new Date(activity.date).toLocaleDateString("en-US", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+    return {
+      icon,
+      title,
+      description: activity.description,
+      amount: `${sign}₦${new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: 2,
+      }).format(activity.amount)}`,
+      time: formattedDate,
+      type: uiType, 
+    };
+  }) || [];
 
   return (
     <div className="min-h-screen bg-gradient-background">
@@ -146,6 +159,7 @@ console.log(details)
           <FinancialCard
             title="Your Savings"
             amount={details?.savings?.total_balance}
+            count={undefined}
             subtitle="Available balance"
             icon={<Wallet className="h-5 w-5" />}
             variant="success"
@@ -154,15 +168,31 @@ console.log(details)
           
           <FinancialCard
             title="Outstanding Loan"
-            amount={details?.loans?.outstanding_loans}
-            subtitle="Next payment: ₦15,000 due Dec 15"
+            count={details?.loans?.outstanding_loans}
+            amount={undefined}
             icon={<CreditCard className="h-5 w-5" />}
             variant="warning"
-          />
+          >
+             <div className="space-y-2 mt-2">
+              <div className="flex justify-between">
+                <span className="text-[14px]">Loan</span>
+                <span className="text-[14px]">Balance</span>
+              </div>
+              <div  className="flex flex-col gap-2 text-sm">
+              {details?.loans?.items?.map((investment: any, index) => (
+                  <div className="flex items-center justify-between" key={index}>
+                  <span className="text-[12px]">{investment.loan_name}</span>
+                    <span className="text-[12px]">{new Intl.NumberFormat('en-US', {minimumFractionDigits:2}).format(investment.loan_balance)}</span>
+               </div>
+              ))}
+            </div>
+            </div>
+          </FinancialCard>
           
           <FinancialCard
             title="Total Investments"
             amount={details?.investments?.total_investment}
+            count={undefined}
             subtitle="Current portfolio value"
             icon={<TrendingUp className="h-5 w-5" />}
             variant="accent"
@@ -240,30 +270,6 @@ console.log(details)
 
           {/* Notifications Panel */}
           <NotificationsPanel />
-        </div>
-
-        {/* Quick Stats Footer */}
-        <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-card shadow-card rounded-xl p-6 text-center">
-            <DollarSign className="h-8 w-8 text-success mx-auto mb-2" />
-            <p className="text-2xl font-bold text-success">₦1.7M</p>
-            <p className="text-sm text-muted-foreground">Total Contributed</p>
-          </div>
-          <div className="bg-gradient-card shadow-card rounded-xl p-6 text-center">
-            <TrendingUp className="h-8 w-8 text-primary mx-auto mb-2" />
-            <p className="text-2xl font-bold text-primary">10.2%</p>
-            <p className="text-sm text-muted-foreground">Average Return</p>
-          </div>
-          <div className="bg-gradient-card shadow-card rounded-xl p-6 text-center">
-            <CreditCard className="h-8 w-8 text-accent mx-auto mb-2" />
-            <p className="text-2xl font-bold text-accent">2</p>
-            <p className="text-sm text-muted-foreground">Active Loans</p>
-          </div>
-          <div className="bg-gradient-card shadow-card rounded-xl p-6 text-center">
-            <Wallet className="h-8 w-8 text-success mx-auto mb-2" />
-            <p className="text-2xl font-bold text-success">3 years</p>
-            <p className="text-sm text-muted-foreground">Membership</p>
-          </div>
         </div>
       </div>
     </div>

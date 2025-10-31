@@ -46,7 +46,13 @@ const totalInterest = schedules?.reduce(
   }
 
   const fetchProducts = async()=>{
-    await api('/odoo/api/portal/loan_types').then(resp=>setProducts(resp.data))
+    const payload={
+      jsonrpc:'2',
+      method: 'call',
+      id:1,
+      params:{}
+    }
+    await api.post('/odoo/api/portal/loan_types', payload).then(resp=>setProducts(resp.data.result.loan_types))
   }
 useEffect(()=>{
 fetchProducts()
@@ -76,9 +82,9 @@ fetchProducts()
                 onChange={handleChange}
               >
                 <option value="">Select product</option>
-                {products.map((product) => (
-                  <option value={product.productCode} key={product.productCode}>
-                    {product.productName}
+                {products?.map((product:any) => (
+                  <option value={product.id} key={product.id}>
+                    {product.name}
                   </option>
                 ))}
               </select>

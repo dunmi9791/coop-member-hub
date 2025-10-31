@@ -8,7 +8,9 @@ import {
   User, 
   Settings, 
   HelpCircle,
-  LogOut
+  LogOut,
+  DoorOpen,
+  
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
@@ -33,6 +35,8 @@ const mainItems = [
   { title: "Loans", url: "/dashboard/loans", icon: CreditCard },
   { title: "Investments", url: "/dashboard/investments", icon: TrendingUp },
   { title: "Statements", url: "/dashboard/statements", icon: FileText },
+  { title: "Withdrawal", url: "/dashboard/withdrawal", icon: Wallet },
+  { title: "Retirement", url: "/dashboard/retirement", icon: DoorOpen },
 ];
 
 const accountItems = [
@@ -124,4 +128,4 @@ export function AppSidebar() {
       </SidebarFooter>
     </Sidebar>
   );
-}
+} 

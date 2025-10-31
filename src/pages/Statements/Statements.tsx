@@ -8,9 +8,9 @@ const {pathname}= useLocation()
         <h1 className="text-3xl font-bold text-foreground">Statements</h1>
       </div>
       <div className="flex gap-3 items-center">
-      <Link to='' className={ pathname === '/statements' ? 'bg-gradient-primary active-selector' : 'inactive'}>
+      <Link to='' className={ pathname === '/dashboard/statements' ? 'bg-gradient-primary active-selector' : 'inactive'}>
       Saving statement</Link>
-      <Link to='loan-statement' className={ pathname === '/statements/loan-statement' ? 'bg-gradient-primary active-selector' : 'inactive'}>Loan statement</Link>
+      <Link to='loan-statement' className={ pathname === '/dashboard/statements/loan-statement' ? 'bg-gradient-primary active-selector' : 'inactive'}>Loan statement</Link>
     </div>
     <Outlet/>
       </div>

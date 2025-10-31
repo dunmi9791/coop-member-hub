@@ -98,10 +98,10 @@ export default function DataTable({shareData}) {
           placeholder="Search (type, unit, amount, status, date)…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-xs"
+          className="w-full"
         />
 
-        <Select value={shareType} onValueChange={setShareType}>
+        {/* <Select value={shareType} onValueChange={setShareType}>
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Share Type" />
           </SelectTrigger>
@@ -110,9 +110,9 @@ export default function DataTable({shareData}) {
             <SelectItem value="Preference">Preference</SelectItem>
             <SelectItem value="Bonus">Bonus</SelectItem>
           </SelectContent>
-        </Select>
+        </Select> */}
 
-        <Select value={status} onValueChange={setStatus}>
+        {/* <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -123,9 +123,9 @@ export default function DataTable({shareData}) {
             <SelectItem value="Rejected">Rejected</SelectItem>
             <SelectItem value="Closed">Closed</SelectItem>
           </SelectContent>
-        </Select>
+        </Select> */}
 
-        <Input
+        {/* <Input
           type="number"
           placeholder="Unit"
           value={unit}
@@ -138,7 +138,7 @@ export default function DataTable({shareData}) {
           value={date}
           onChange={(e) => setDate(e.target.value)}
           className="w-[180px]"
-        />
+        /> */}
       </div>
 
       {/* Table */}

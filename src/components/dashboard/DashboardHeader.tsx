@@ -25,7 +25,7 @@ export function DashboardHeader({ memberName, membershipId }: DashboardHeaderPro
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-2xl font-bold">Welcome back, {memberName}</h1>
+              <h1 className="text-2xl font-bold">Welcome back, <span className="capitalize">{memberName}</span></h1>
               <p className="text-primary-foreground/80">Member ID: {membershipId}</p>
             </div>
           </div>

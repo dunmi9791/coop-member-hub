@@ -7,6 +7,7 @@ interface FinancialCardProps {
   amount: number;
   subtitle?: string;
   icon: ReactNode;
+  count: number | undefined;
   variant?: "default" | "success" | "warning" | "accent";
   trend?: "up" | "down" | "neutral";
   className?: string;
@@ -18,6 +19,7 @@ export function FinancialCard({
   amount,
   subtitle,
   icon,
+  count,
   variant = "default",
   trend = "neutral",
   className,
@@ -58,7 +60,9 @@ export function FinancialCard({
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold tracking-tight">{amount}</span>
+          <span className="text-3xl font-bold tracking-tight">
+            { amount ? new Intl.NumberFormat('en-US', 
+            {minimumFractionDigits:2}).format(amount) : count}</span>
           {trend !== "neutral" && (
             <span className={cn("text-sm font-medium", trendColors[trend])}>
               {trend === "up" ? "↑" : "↓"}

@@ -1,6 +1,10 @@
-import React from "react";
+import api from "@/hooks/api";
+import { UserContext } from "@/hooks/AuthContext";
+import React, { useContext, useEffect, useState } from "react";
 
 const MemberProfile = () => {
+  const {credentials} = useContext(UserContext)
+  const [details, setDetails]= useState(null)
   const member = {
     name: "Abdul Rahman",
     email: "abdulrahman@example.com",
@@ -17,6 +21,15 @@ const MemberProfile = () => {
     profilePic: "https://i.pravatar.cc/150?img=12", // placeholder
   };
 
+   const fetchMemberDetails= async()=>{
+    await api.post('/odoo/api/portal/dashboard', {}, {headers:{
+    }}).then(resp=>setDetails(resp?.data?.result))
+  }
+
+  useEffect(()=>{
+fetchMemberDetails()
+  }, [])
+
   return (
     <div className="container mx-auto px-4 py-4">
        <div className="mb-5">
@@ -30,10 +43,10 @@ const MemberProfile = () => {
           className="w-32 h-32 rounded-full shadow-md object-cover"
         />
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            {member.name}
+          <h1 className="text-2xl font-bold text-foreground capitalize">
+            {credentials?.result?.name}
           </h1>
-          <p className="text-muted-foreground">{member.email}</p>
+          <p className="text-muted-foreground ">{credentials?.result?.username}</p>
           <p className="text-muted-foreground">{member.phone}</p>
         </div>
       </div>
@@ -78,11 +91,11 @@ const MemberProfile = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="p-4 bg-blue-50 rounded-xl">
               <p className="text-sm text-blue-600">Savings Balance</p>
-              <h3 className="text-xl font-bold">₦{member.savingsBalance.toLocaleString()}</h3>
+              <h3 className="text-xl font-bold">{new Intl.NumberFormat('en-US', {minimumFractionDigits:2}).format(details?.savings?.total_balance)}</h3>
             </div>
             <div className="p-4 bg-red-50 rounded-xl">
               <p className="text-sm text-red-600">Loan Balance</p>
-              <h3 className="text-xl font-bold">₦{member.loanBalance.toLocaleString()}</h3>
+              <h3 className="text-xl font-bold">{new Intl.NumberFormat('en-US', {minimumFractionDigits:2}).format(details?.loans?.outstanding_loans)}</h3>
             </div>
           </div>
         </div>

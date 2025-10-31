@@ -1,7 +1,11 @@
 import { Input } from '@/components/ui/input';
-import React, {useState, useEffect} from 'react'
+import api from '@/hooks/api';
+import { UserContext } from '@/hooks/AuthContext';
+import React, {useState, useEffect, useContext} from 'react'
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import { toast } from "@/components/ui/use-toast"
+import { NumericFormat } from 'react-number-format';
 
 const LoanApplication = () => {
 interface Products{
@@ -14,12 +18,16 @@ interface Frequency{
     freqName: string
 }
 interface Input{
-    loanAmount: string,
-    duration: number,
+    loanAmount: number | null,
+    type_id: number,
 }
-  const [input, setInput] = useState <Input |null>(null);
+  const [input, setInput] = useState <Input>({
+    loanAmount: null,
+    type_id: null
+  });
   const [products, setProducts] = useState<Products[]>([]);
   const [frequencies, setFrequencies] = useState([]);
+  const {credentials} = useContext(UserContext)
   const [detail, setDetail] = useState({
     frequency:'',
     duration:'',
@@ -44,9 +52,50 @@ const totalInterest = schedules?.reduce(
     return suffixes[(value - 20) % 10] || suffixes[value] || suffixes[0];
   }
 
+   const fetchProducts = async()=>{
+      const payload={
+        jsonrpc:'2',
+        method: 'call',
+        id:1,
+        params:{}
+      }
+      await api.post('/odoo/api/portal/loan_types', payload).then(resp=>setProducts(resp.data.result.loan_types))
+    }
+  useEffect(()=>{
+  fetchProducts()
+  }, [])
+  
+
+  const onSubmit = async(e)=>{
+    e.preventDefault()
+    const payload ={
+      partner_id: Number(credentials?.result?.partner_id),
+      type_id: input.type_id,
+      amount: input.loanAmount
+    }
+    try {
+       await api.post('/odoo/api/portal/new_loan', payload)
+      toast({ 
+      title: "Success!",
+      description: 'Loan application was successful',
+      variant: "default"
+      })
+      setInput({
+        loanAmount: null,
+        type_id: null
+      })
+    } catch (error) {
+      toast({
+    title: "Error!",
+    description: error.response.data.message,
+    variant: "destructive",
+    })
+    }
+  }
+
   return (
-    <>
-<form>
+<>
+<form onSubmit={onSubmit}>
         <div className="mt-3 border  rounded-[18px] border-[#043d73] bg-[#fff]" >
           <div
             className="p-3 form-header bg-[#043d73] rounded-t-[18px]"
@@ -63,14 +112,15 @@ const totalInterest = schedules?.reduce(
                 Loan product<sup className="text-red-700">*</sup>
               </label>
               <select
-                name="product"
+                name="type_id"
                 required
                 onChange={handleChange}
+                value={input.type_id ?? ''}
               >
                 <option value="">Select product</option>
-                {products.map((product) => (
-                  <option value={product.productCode} key={product.productCode}>
-                    {product.productName}
+                {products.map((product:any) => (
+                  <option value={product.id} key={product.id}>
+                    {product.name}
                   </option>
                 ))}
               </select>
@@ -83,11 +133,12 @@ const totalInterest = schedules?.reduce(
                 {/* // thousandSeparator={true}
                 // decimalScale={2}
                 // fixedDecimalScale={true} */}
-                <Input
+                <NumericFormat
                 name="loanAmount"
+                thousandSeparator
                 required
                 onChange={handleChange}
-                type='number'
+                value={input.loanAmount ?? ''}
               />
             </div>
             <div className="input-container">
@@ -111,7 +162,7 @@ const totalInterest = schedules?.reduce(
                 <label htmlFor="duration">
                   Loan duration (months)<sup className="text-red-700">*</sup>{" "}
                 </label>
-              <input type="number" name="duration" onChange={handleChange} value={input?.duration}/>
+              <input type="number" name="duration" onChange={handleChange} />
             </div>
             <div className="input-container">
               <label htmlFor="interestRate">
@@ -137,11 +188,11 @@ const totalInterest = schedules?.reduce(
                 name="interestLoanAmount"
                 readOnly
                 disabled
-                value={new Intl.NumberFormat("en-US", {
-                  minimumFractionDigits: 2,
-                }).format(
-                  Number(input?.loanAmount?.replace(/,/g, "")) + totalInterest
-                )}
+                // value={new Intl.NumberFormat("en-US", {
+                //   minimumFractionDigits: 2,
+                // }).format(
+                //   // Number(input?.loanAmount?.replace(/,/g, "")) + totalInterest
+                // )}
               />
             </div>
           </div>
@@ -171,7 +222,7 @@ const totalInterest = schedules?.reduce(
                   <div className="subtitle text-white">Loan repayment breakdown</div>
                 </div>
                 <div className="p-3 d-flex flex-column gap-3">
-                  {schedules?.map((schedule, i) => {
+                  {/* {schedules?.map((schedule, i) => {
                     const position = i + 1;
                     const progress = (position / input?.duration) * 100;
                     return (
@@ -208,7 +259,7 @@ const totalInterest = schedules?.reduce(
                         </span>
                       </div>
                     );
-                  })}
+                  })} */}
                 </div>
               </div>
             </div>

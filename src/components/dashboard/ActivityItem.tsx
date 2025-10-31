@@ -7,7 +7,7 @@ interface ActivityItemProps {
   description: string;
   amount?: string;
   time: string;
-  type?: "deposit" | "withdrawal" | "loan" | "investment";
+  type?: "contribution" | "withdrawal" | "loan_disbursement" | "investment";
 }
 
 export function ActivityItem({
@@ -16,19 +16,19 @@ export function ActivityItem({
   description,
   amount,
   time,
-  type = "deposit"
+  type = "contribution"
 }: ActivityItemProps) {
   const typeStyles = {
-    deposit: "text-success bg-success-light",
+    contribution: "text-success bg-success-light",
     withdrawal: "text-destructive bg-destructive/10", 
-    loan: "text-primary bg-primary-glow",
+    loan_disbursement: "text-primary bg-primary-glow",
     investment: "text-accent bg-accent-light"
   };
 
   const amountStyles = {
-    deposit: "text-success",
+    contribution: "text-success",
     withdrawal: "text-destructive",
-    loan: "text-primary", 
+    loan_disbursement: "text-primary", 
     investment: "text-accent"
   };
 

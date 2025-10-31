@@ -1,3 +1,4 @@
+import Scroller from '@/components/ui/Scroller'
 import React from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
 
@@ -9,7 +10,8 @@ const Investments = () => {
            <h1 className="text-3xl font-bold text-foreground">Investment Management</h1>
            <p className="text-muted-foreground">Manage your investments</p>
          </div>
-         <div className='flex gap-5 items-center mb-5'>
+         <Scroller>
+         <div className='flex gap-5 items-center mb-5 border-b'>
            <Link to='' className={ pathname === '/dashboard/investments' ||
              pathname === '/dashboard/investments/invest' ? 'bg-gradient-primary active-selector' : 'inactive'}>
          Investment portfolio
@@ -19,6 +21,7 @@ const Investments = () => {
             <Link to='investment-withdrawal' className={ pathname.includes('investments/investment-withdrawal') ?
             'active-selector bg-gradient-primary' : 'inactive'}>Investement withdrawal</Link>
             </div>
+            </Scroller>
          <Outlet/>
          </div>
   )

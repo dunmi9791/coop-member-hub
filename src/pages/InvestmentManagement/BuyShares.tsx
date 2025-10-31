@@ -53,7 +53,7 @@ const BuyShares = () => {
                 </div>
                 <div className="input-container">
                     <label htmlFor="shareUnit">
-                        Loan amount<sup className="text-red-700">*</sup>
+                    Share units<sup className="text-red-700">*</sup>
                     </label>
                     {/* <NumericFormat */}
                     {/* // thousandSeparator={true}

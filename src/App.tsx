@@ -33,6 +33,16 @@ import Settings from "./pages/Settings";
 import Help from "./pages/Help/Help";
 import ContactUs from "./pages/Help/ContactUs";
 import Faqs from "./pages/Help/Faqs";
+import Withdrawal from "./pages/Withdrawal/Withdrawal";
+import WithdrawalIndex from "./pages/Withdrawal/WithdrawalIndex";
+import Retirement from "./pages/Retirement";
+import LoanRequests from "./pages/LoanManagement/LoanRequests";
+import InitiateWithdrawal from "./pages/Withdrawal/InitiateWithdrawal";
+import RescheduleSavings from "./pages/RescheduleSavings";
+import ViewLoanRepayment from "./pages/LoanManagement/ViewLoanRepayment";
+import LoanReschedule from "./pages/LoanManagement/LoanReschedule";
+
+
 
 const queryClient = new QueryClient();
 
@@ -77,7 +87,6 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
         <BrowserRouter>
           <AppLayout>
             <Routes>
@@ -104,10 +113,21 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/dashboard/savings/reschedule-savings"
+                element={
+                  <ProtectedRoute>
+                    <RescheduleSavings />
+                  </ProtectedRoute>
+                }
+              />
 
                 <Route path="/dashboard/loans" element={<Loans />}>
              <Route index element={<LoanCalculator/>}/>
              <Route path='apply-for-loan' element={<LoanApplication/>}/>
+             <Route path='loan-requests' element={<LoanRequests/>}/>
+             <Route path='view-loan-repayments' element={<ViewLoanRepayment/>}/>
+             <Route path='loan-reschedule' element={<LoanReschedule/>}/>
              </Route>
              <Route path="/dashboard/investments" element={<Investments />} >
              <Route path="/dashboard/investments" element={<SharesPortfolio/>}>
@@ -123,10 +143,15 @@ const App = () => {
              <Route path="view-investment" element={<ViewShare/>}/>
              </Route>
              </Route>
+             <Route path='/dashboard/withdrawal' element={<WithdrawalIndex/>}>
+             <Route index element={<Withdrawal/>}/>
+             <Route path="initiate-withdrawal" element={<InitiateWithdrawal/>}/>
+             </Route>
              <Route path="/dashboard/statements" element={<Statements />} >
              <Route index element={<SavingStatement/>}/>
              <Route path="loan-statement" element={<LoanStatement/>}/>
              </Route>
+             <Route path="/dashboard/retirement" element={<Retirement/>}/>
              <Route path="/dashboard/profile" element={<MemberProfile/>}/>
              <Route path="/dashboard/settings" element={<Settings/>}/>
              <Route path="/dashboard/help" element={<Help/>}>

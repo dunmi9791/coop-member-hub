@@ -32,7 +32,7 @@ import {
 const SavingStatement = () => {
 
 
-// ✅ Sample savings transactions
+//  Sample savings transactions
 const savingsData = [
   { id: 1, date: "2025-01-05", description: "Monthly Savings", amount: 5000, balance: 5000, status: "Credit" },
   { id: 2, date: "2025-02-05", description: "Monthly Savings", amount: 5000, balance: 10000, status: "Credit" },
@@ -41,7 +41,7 @@ const savingsData = [
   { id: 5, date: "2025-05-15", description: "Withdrawal", amount: -3000, balance: 10000, status: "Debit" },
 ]
 
-// ✅ Styled status badge
+// Styled status badge
 function StatusBadge({ status }: { status: string }) {
   const key = status.toLowerCase()
   const style =
@@ -150,25 +150,9 @@ const generatePDF = () => {
             placeholder="Search (description, amount, date)…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="max-w-xs"
+            className="w-full"
           />
 
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Credit">Credit</SelectItem>
-              <SelectItem value="Debit">Debit</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-[180px]"
-          />
         </div>
 
         {/* Savings Table */}

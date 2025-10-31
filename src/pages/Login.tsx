@@ -44,6 +44,7 @@ const Login = () => {
       const resp = await api.post('/odoo/web/session/authenticate', payload)
       sessionStorage.setItem('user', JSON.stringify(resp.data));
       navigate('/dashboard');
+      setCredentials(resp?.data?.result)
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false)
