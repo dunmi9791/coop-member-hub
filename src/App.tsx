@@ -41,6 +41,9 @@ import InitiateWithdrawal from "./pages/Withdrawal/InitiateWithdrawal";
 import RescheduleSavings from "./pages/RescheduleSavings";
 import ViewLoanRepayment from "./pages/LoanManagement/ViewLoanRepayment";
 import LoanReschedule from "./pages/LoanManagement/LoanReschedule";
+import RealEstateInvestment from "./pages/RealEstateInvestment/RealEstateInvestment";
+import AvailableInvestments from "./pages/RealEstateInvestment/AvailableInvestments";
+import MyInvestments from "./pages/RealEstateInvestment/MyInvestments";
 
 
 
@@ -151,6 +154,10 @@ const App = () => {
              <Route path="loan-statement" element={<LoanStatement/>}/>
              </Route>
              <Route path="/dashboard/retirement" element={<Retirement/>}/>
+             <Route path="/dashboard/real-estate" element={<RealEstateInvestment />}>
+               <Route index element={<AvailableInvestments />} />
+               <Route path="my-investments" element={<MyInvestments />} />
+             </Route>
              <Route path="/dashboard/profile" element={<MemberProfile/>}/>
              <Route path="/dashboard/settings" element={<Settings/>}/>
              <Route path="/dashboard/help" element={<Help/>}>
