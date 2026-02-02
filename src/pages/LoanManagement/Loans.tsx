@@ -12,9 +12,7 @@ const Loans = () => {
       </div>
       <Scroller>
       <div className='flex gap-5 items-center mb-5 border-b border-b-primary/20'>
-        <Link to='' className={ pathname === '/dashboard/loans' ? 'bg-gradient-primary active-selector' : 'inactive'}>
-      Loan calculator</Link>
-      <Link to='apply-for-loan' className={ pathname.includes('loans/apply-for-loan') ?
+      <Link to='' className={ pathname === '/dashboard/loans' ?
          'active-selector bg-gradient-primary' : 'inactive'}> Apply for loan</Link>
          <Link to='loan-requests' className={ pathname.includes('loans/loan-requests') ?
          'active-selector bg-gradient-primary' : 'inactive'}> Loan requests</Link>
