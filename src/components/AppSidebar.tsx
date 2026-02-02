@@ -9,7 +9,6 @@ import {
   Settings, 
   HelpCircle,
   LogOut,
-  DoorOpen,
   Building2,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -37,7 +36,6 @@ const mainItems = [
   { title: "Real Estate", url: "/dashboard/real-estate", icon: Building2 },
   { title: "Statements", url: "/dashboard/statements", icon: FileText },
   { title: "Withdrawal", url: "/dashboard/withdrawal", icon: Wallet },
-  { title: "Retirement", url: "/dashboard/retirement", icon: DoorOpen },
 ];
 
 const accountItems = [

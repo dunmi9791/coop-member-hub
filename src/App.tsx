@@ -35,7 +35,7 @@ import ContactUs from "./pages/Help/ContactUs";
 import Faqs from "./pages/Help/Faqs";
 import Withdrawal from "./pages/Withdrawal/Withdrawal";
 import WithdrawalIndex from "./pages/Withdrawal/WithdrawalIndex";
-import Retirement from "./pages/Retirement";
+
 import LoanRequests from "./pages/LoanManagement/LoanRequests";
 import InitiateWithdrawal from "./pages/Withdrawal/InitiateWithdrawal";
 import RescheduleSavings from "./pages/RescheduleSavings";
@@ -153,7 +153,7 @@ const App = () => {
              <Route index element={<SavingStatement/>}/>
              <Route path="loan-statement" element={<LoanStatement/>}/>
              </Route>
-             <Route path="/dashboard/retirement" element={<Retirement/>}/>
+             
              <Route path="/dashboard/real-estate" element={<RealEstateInvestment />}>
                <Route index element={<AvailableInvestments />} />
                <Route path="my-investments" element={<MyInvestments />} />
