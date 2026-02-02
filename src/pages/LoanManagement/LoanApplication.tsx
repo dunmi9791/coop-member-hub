@@ -195,80 +195,12 @@ const totalInterest = schedules?.reduce(
                 // )}
               />
             </div>
-          </div>
         </div>
-        {/* Loan repayment breakdown */}
-        <div className="rounded-[18px] border-[#043d73] border bg-white mt-10">
-          <div
-            className="p-3 form-header bg-[#043d73]  rounded-t-[15px]"
-          >
-            <div className="subtitle text-white">
-              Loan application /Loan repayment breakdown
-            </div>
-          </div>
-          <div className="p-3">
-            <div className="selected-items-container">
-                 <div
-                className="rounded-[16px] mt-3 border border-[#043d73]">
-                <div
-                  className="p-3 form-header  bg-[#043d73] rounded-t-[15px]">
-                  <div className="subtitle text-white">Loan details</div>
-                </div>
-                </div>
-              <div
-                className="rounded-[16px] mt-3 border border-[#043d73]">
-                <div
-                  className="p-3 form-header  bg-[#043d73] rounded-t-[15px]">
-                  <div className="subtitle text-white">Loan repayment breakdown</div>
-                </div>
-                <div className="p-3 d-flex flex-column gap-3">
-                  {/* {schedules?.map((schedule, i) => {
-                    const position = i + 1;
-                    const progress = (position / input?.duration) * 100;
-                    return (
-                      <div className="d-flex justify-content-between align-items-center">
-                        <div className="d-flex gap-2">
-                          <div style={{ width: 50 }}>
-                            <CircularProgressbar
-                              value={progress}
-                              strokeWidth={50}
-                              styles={buildStyles({
-                                strokeLinecap: "butt",
-                              })}
-                            />
-                          </div>
-                          <div className="d-flex flex-column">
-                            <span>
-                              {position}
-                              {getOrdinalSuffix(position)} loan payment
-                            </span>
-                            <span>
-                              {" "}
-                              Due by{" "}
-                              {new Date(schedule.date).toLocaleDateString(
-                                "en-CA"
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                        <span style={{ fontWeight: "500", color: "#333333" }}>
-                          NGN{" "}
-                          {new Intl.NumberFormat("en-US", {
-                            minimumFractionDigits: 2,
-                          }).format(schedule.total)}
-                        </span>
-                      </div>
-                    );
-                  })} */}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-end gap-5 p-5 bg-[#1985B3] rounded-b-[18px] mt-5">
-            <button className='apply-btn'>Apply</button>
-            <button className='discard-btn'>Discard</button>
-          </div>
+        <div className="flex justify-end gap-5 p-5 bg-[#1985B3] rounded-b-[18px]">
+          <button className='apply-btn'>Apply</button>
+          <button className='discard-btn'>Discard</button>
         </div>
+      </div>
       </form>
     </>
     )}
