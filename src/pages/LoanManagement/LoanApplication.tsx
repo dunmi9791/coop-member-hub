@@ -73,7 +73,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       jsonrpc: '2.0',
       method: 'call',
       params: {
-        partner_id: Number(credentials?.result?.partner_id),
+        partner_id: Number(credentials?.partner_id),
         type_id: Number(input.type_id),
         amount: input.loanAmount,
         start_date: input.start_date,
@@ -197,8 +197,8 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             </div>
         </div>
         <div className="flex justify-end gap-5 p-5 bg-[#1985B3] rounded-b-[18px]">
-          <button className='apply-btn'>Apply</button>
-          <button className='discard-btn'>Discard</button>
+          <button type="submit" className='apply-btn'>Apply</button>
+          <button type="button" className='discard-btn'>Discard</button>
         </div>
       </div>
       </form>

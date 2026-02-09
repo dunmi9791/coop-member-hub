@@ -121,8 +121,8 @@ const MemberProfile = () => {
   }
 
   const displayMember = {
-    name: profile?.name || credentials?.result?.name || "Member",
-    username: credentials?.result?.username || "",
+    name: profile?.name || credentials?.name || "Member",
+    username: credentials?.username || "",
     gender: profile?.gender || "Not Specified",
     dob: profile?.date_of_birth || "Not Specified",
     address: profile?.address?.trim() || "Not Specified",
