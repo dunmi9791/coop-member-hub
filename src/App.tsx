@@ -39,8 +39,6 @@ import WithdrawalIndex from "./pages/Withdrawal/WithdrawalIndex";
 import LoanRequests from "./pages/LoanManagement/LoanRequests";
 import InitiateWithdrawal from "./pages/Withdrawal/InitiateWithdrawal";
 import RescheduleSavings from "./pages/RescheduleSavings";
-import ViewLoanRepayment from "./pages/LoanManagement/ViewLoanRepayment";
-import LoanReschedule from "./pages/LoanManagement/LoanReschedule";
 import RealEstateInvestment from "./pages/RealEstateInvestment/RealEstateInvestment";
 import AvailableInvestments from "./pages/RealEstateInvestment/AvailableInvestments";
 import MyInvestments from "./pages/RealEstateInvestment/MyInvestments";
@@ -128,8 +126,6 @@ const App = () => {
                 <Route path="/dashboard/loans" element={<Loans />}>
              <Route index element={<LoanApplication/>}/>
              <Route path='loan-requests' element={<LoanRequests/>}/>
-             <Route path='view-loan-repayments' element={<ViewLoanRepayment/>}/>
-             <Route path='loan-reschedule' element={<LoanReschedule/>}/>
              </Route>
              <Route path="/dashboard/investments" element={<Investments />} >
              <Route path="/dashboard/investments" element={<SharesPortfolio/>}>

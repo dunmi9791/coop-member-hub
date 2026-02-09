@@ -30,6 +30,8 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(""); // Clear any previous errors
+    
     const payload ={
     jsonrpc: "2.0",
     method: "call",
@@ -38,21 +40,51 @@ const Login = () => {
         login: email, 
         password: password,
         context: {}
-    },
+    },
 }
     try {
-      const resp = await api.post('/odoo/web/session/authenticate', payload)
-      sessionStorage.setItem('user', JSON.stringify(resp.data));
-      navigate('/dashboard');
-      setCredentials(resp?.data?.result)
+      const resp = await api.post('/web/session/authenticate', payload, {
+        withCredentials: true // Enable cookies for session management
+      });
+      
+      // Check if authentication was successful
+      if (resp.data?.result && resp.data.result.uid) {
+        // Store the complete session data
+        sessionStorage.setItem('user', JSON.stringify(resp.data));
+        
+        // Also store session info separately for easy access
+        const sessionInfo = {
+          session_id: resp.data.result.session_id,
+          uid: resp.data.result.uid,
+          db: resp.data.result.db,
+          user_context: resp.data.result.user_context,
+          name: resp.data.result.name,
+          username: resp.data.result.username
+        };
+        sessionStorage.setItem('session_info', JSON.stringify(sessionInfo));
+        
+        setCredentials(resp.data.result);
+        navigate('/dashboard');
+      } else {
+        // Authentication failed - show error message
+        const errorMessage = resp.data?.error?.data?.message || resp.data?.error?.message || 'Invalid email or password. Please try again.';
+        setError(errorMessage);
+        toast(errorMessage);
+      }
+      
       setIsLoading(false);
     } catch (error) {
-      setIsLoading(false)
-        if (error?.response?.status === 400) {
-        toast(error.response.data.message)
-      }else if (error) {
-        toast(error.message)
+      setIsLoading(false);
+      let errorMessage = 'An error occurred during login. Please try again.';
+      
+      if (error?.response?.status === 400) {
+        errorMessage = error.response.data.message || 'Invalid credentials. Please check your email and password.';
+      } else if (error?.message) {
+        errorMessage = error.message.includes('Network Error') ? 'Network error. Please check your connection and try again.' : error.message;
       }
+      
+      setError(errorMessage);
+      toast(errorMessage);
     }
     // // Check demo credentials
     // const user = DEMO_CREDENTIALS.find(
@@ -110,6 +142,16 @@ const Login = () => {
             </Alert>
           </div>*/}
 
+          {error && (
+            <div className="mb-4">
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {error}
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
@@ -118,7 +160,10 @@ const Login = () => {
                 type="email"
                 placeholder="Enter your email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error) setError(""); // Clear error when user starts typing
+                }}
                 required
                 className="h-11"
               />
@@ -132,7 +177,10 @@ const Login = () => {
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (error) setError(""); // Clear error when user starts typing
+                  }}
                   required
                   className="h-11 pr-10"
                 />

@@ -90,8 +90,29 @@ const {details, setDetails} =useContext(UserContext)
   };
 
   const fetchMemberDetails= async()=>{
-    await api.post('/odoo/api/portal/dashboard', {}, {headers:{
-    }}).then(resp=>setDetails(resp?.data?.result))
+    const requestPayload = {
+      "jsonrpc": "2.0",
+      "method": "call",
+      "id": 1,
+      "params": {}
+    };
+    
+    try {
+      // Try to call the actual API endpoint first
+      const response = await api.post('/api/portal/dashboard', requestPayload);
+      const result = response?.data?.result;
+      
+      // Handle field mapping: API returns "investment" but we expect "total_investment"
+      if (result?.investments && result.investments.investment !== undefined) {
+        result.investments.total_investment = result.investments.investment;
+      }
+      
+      setDetails(result);
+    } catch (error) {
+      console.error('API call failed:', error);
+      // No fallback to mock data - display error state or empty data
+      setDetails(null);
+    }
   }
 
   useEffect(()=>{
@@ -120,6 +141,13 @@ const recentActivities =
         icon = <ArrowUpRight className="h-4 w-4 text-blue-600" />;
         uiType = "contribution";
         title = "Contribution";
+        break;
+
+      case "withdrawal":
+        icon = <ArrowDownRight className="h-4 w-4 text-red-600" />;
+        uiType = "withdrawal";
+        title = "Withdrawal";
+        sign = "-";
         break;
 
       default:
@@ -193,25 +221,10 @@ const recentActivities =
             title="Total Investments"
             amount={details?.investments?.total_investment}
             count={undefined}
-            subtitle="Current portfolio value"
             icon={<TrendingUp className="h-5 w-5" />}
             variant="accent"
             trend="up"
-          >
-            <div className="space-y-2 mt-4">
-              {memberData.investments.map((investment, index) => (
-                <div key={index} className="flex justify-between items-center text-sm">
-                  <span className="opacity-75">{investment.name}</span>
-                  <div className="flex items-center gap-2">
-                    <span>{investment.amount}</span>
-                    <span className="text-xs bg-white/20 px-2 py-1 rounded">
-                      {investment.growth}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </FinancialCard>
+          />
         </div>
 
         {/* Action Buttons */}
@@ -269,7 +282,7 @@ const recentActivities =
           </Card>
 
           {/* Notifications Panel */}
-          <NotificationsPanel />
+          <NotificationsPanel notifications={details?.notifications} />
         </div>
       </div>
     </div>

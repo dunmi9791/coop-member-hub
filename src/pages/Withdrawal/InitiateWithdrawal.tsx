@@ -38,8 +38,7 @@ const InitiateWithdrawal = () => {
       reason: input.reason
     }
     try{
-   const resp= await api.post('/odoo/api/portal/dashboard', payload, {headers:{
-    }})
+   const resp= await api.post('/api/portal/withdrawal', payload)
    toast({ 
       title: "Success!",
       description: 'Withdrawal application was successful',

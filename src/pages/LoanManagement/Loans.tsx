@@ -103,12 +103,6 @@ const Loans = () => {
           <Link to='loan-requests' className={pathname.includes('loans/loan-requests') ? 'active-selector bg-gradient-primary' : 'inactive'}>
             Loan requests
           </Link>
-          <Link to='view-loan-repayments' className={pathname.includes('loans/view-loan-repayments') ? 'active-selector bg-gradient-primary' : 'inactive'}>
-            View loan repayment
-          </Link>
-          <Link to='loan-reschedule' className={pathname.includes('loans/loan-reschedule') ? 'active-selector bg-gradient-primary' : 'inactive'}>
-            Loan reschedule
-          </Link>
         </div>
       </Scroller>
       <Outlet />

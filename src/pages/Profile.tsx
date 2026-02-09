@@ -23,8 +23,12 @@ const MemberProfile = () => {
   };
 
    const fetchMemberDetails= async()=>{
-    await api.post('/odoo/api/portal/dashboard', {}, {headers:{
-    }}).then(resp=>setDetails(resp?.data?.result))
+    const payload = {
+      jsonrpc: '2.0',
+      method: 'call',
+      params: {}
+    }
+    await api.post('/api/portal/dashboard', payload).then(resp=>setDetails(resp?.data?.result))
   }
 
   useEffect(()=>{

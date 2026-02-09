@@ -9,7 +9,17 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
      proxy: {
-      '/odoo': {
+      '/web': {
+        target: 'http://41.78.157.36:8069', 
+        changeOrigin: true,
+        secure: false,
+      },
+      '/api/portal': {
+        target: 'http://41.78.157.36:8069', 
+        changeOrigin: true,
+        secure: false,
+      },
+      '/odoo/api': {
         target: 'http://41.78.157.36:8069', 
         changeOrigin: true,
         secure: false,

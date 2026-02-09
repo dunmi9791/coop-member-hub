@@ -52,7 +52,7 @@ const totalInterest = schedules?.reduce(
       id:1,
       params:{}
     }
-    await api.post('/odoo/api/portal/loan_types', payload).then(resp=>setProducts(resp.data.result.loan_types))
+    await api.post('/api/portal/loan_types', payload).then(resp=>setProducts(resp.data.result.loan_types))
   }
 useEffect(()=>{
 fetchProducts()

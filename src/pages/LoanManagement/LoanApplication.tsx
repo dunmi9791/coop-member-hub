@@ -2,8 +2,6 @@ import { Input } from '@/components/ui/input';
 import api from '@/hooks/api';
 import { UserContext } from '@/hooks/AuthContext';
 import React, {useState, useEffect, useContext} from 'react'
-import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
-import "react-circular-progressbar/dist/styles.css";
 import { toast } from "@/components/ui/use-toast"
 import { NumericFormat } from 'react-number-format';
 
@@ -13,27 +11,24 @@ interface Products{
     productName: string
 }
 
-interface Frequency{
-    freqCode: number;
-    freqName: string
-}
 interface Input{
     loanAmount: number | null,
-    type_id: number,
+    type_id: number | null,
+    start_date: string,
+    first_repayment_date: string,
+    duration: number | null,
+    latest_payslip: string | null,
 }
   const [input, setInput] = useState <Input>({
     loanAmount: null,
-    type_id: null
+    type_id: null,
+    start_date: '',
+    first_repayment_date: '',
+    duration: null,
+    latest_payslip: null,
   });
   const [products, setProducts] = useState<Products[]>([]);
-  const [frequencies, setFrequencies] = useState([]);
   const {credentials} = useContext(UserContext)
-  const [detail, setDetail] = useState({
-    frequency:'',
-    duration:'',
-    interestRate:''
-  });
-  const [schedules, setSchedules] = useState([]);
 
 const handleChange =(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>)=>{
     const name = e.target.name;
@@ -41,16 +36,22 @@ const handleChange =(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement
     setInput({...input, [name]:value})
 }
 
-const totalInterest = schedules?.reduce(
-    (sum, schedule) => sum + schedule.interest,
-    0
-  );
-
-  function getOrdinalSuffix(num) {
-    const suffixes = ["th", "st", "nd", "rd"];
-    const value = num % 100;
-    return suffixes[(value - 20) % 10] || suffixes[value] || suffixes[0];
+const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const name = e.target.name;
+  const file = e.target.files?.[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      // Remove the prefix (e.g., "data:image/jpeg;base64,")
+      const base64 = base64String.split(',')[1];
+      setInput({ ...input, [name]: base64 });
+    };
+    reader.readAsDataURL(file);
+  } else {
+    setInput({ ...input, [name]: null });
   }
+};
 
    const fetchProducts = async()=>{
       const payload={
@@ -59,7 +60,7 @@ const totalInterest = schedules?.reduce(
         id:1,
         params:{}
       }
-      await api.post('/odoo/api/portal/loan_types', payload).then(resp=>setProducts(resp.data.result.loan_types))
+      await api.post('/api/portal/loan_types', payload).then(resp=>setProducts(resp.data.result.loan_types))
     }
   useEffect(()=>{
   fetchProducts()
@@ -69,27 +70,48 @@ const totalInterest = schedules?.reduce(
   const onSubmit = async(e)=>{
     e.preventDefault()
     const payload ={
-      partner_id: Number(credentials?.result?.partner_id),
-      type_id: input.type_id,
-      amount: input.loanAmount
+      jsonrpc: '2.0',
+      method: 'call',
+      params: {
+        partner_id: Number(credentials?.result?.partner_id),
+        type_id: Number(input.type_id),
+        amount: input.loanAmount,
+        start_date: input.start_date,
+        first_repayment_date: input.first_repayment_date,
+        duration: Number(input.duration),
+        latest_payslip: input.latest_payslip
+      }
     }
     try {
-       await api.post('/odoo/api/portal/new_loan', payload)
+      const resp = await api.post('/api/portal/new_loan', payload)
+      const result = resp.data.result;
+      
       toast({ 
-      title: "Success!",
-      description: 'Loan application was successful',
-      variant: "default"
+        title: result?.status === 'success' || !result?.status ? "Success!" : "Notice",
+        description: result?.message || 'Loan application was successful',
+        variant: "default"
       })
-      setInput({
-        loanAmount: null,
-        type_id: null
-      })
-    } catch (error) {
+      
+      if (result?.status === 'success' || !result?.status) {
+        setInput({
+          loanAmount: null,
+          type_id: null,
+          start_date: '',
+          first_repayment_date: '',
+          duration: null,
+          latest_payslip: null,
+        })
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error?.message || 
+                           error.response?.data?.message || 
+                           error.message || 
+                           "An error occurred during loan application";
       toast({
-    title: "Error!",
-    description: error.response.data.message,
-    variant: "destructive",
-    })
+        title: "Error!",
+        description: errorMessage,
+        variant: "destructive",
+      })
     }
   }
 
@@ -137,62 +159,40 @@ const totalInterest = schedules?.reduce(
                 name="loanAmount"
                 thousandSeparator
                 required
-                onChange={handleChange}
+                onValueChange={(values) => {
+                  const { floatValue } = values;
+                  setInput({ ...input, loanAmount: floatValue || null });
+                }}
                 value={input.loanAmount ?? ''}
               />
-            </div>
-            <div className="input-container">
-              <label htmlFor="frequency">
-                Frequency<sup className="text-red-700">*</sup>
-              </label>
-              <select
-                name="frequency"
-                disabled
-                value={detail?.frequency}
-              >
-                <option value="">Select frequency</option>
-                {frequencies.map((frequency) => (
-                  <option value={frequency.freqCode} key={frequency.freqCode}>
-                    {frequency.freqName}
-                  </option>
-                ))}
-              </select>
             </div>
             <div className="input-container">
                 <label htmlFor="duration">
                   Loan duration (months)<sup className="text-red-700">*</sup>{" "}
                 </label>
-              <input type="number" name="duration" onChange={handleChange} />
+              <input type="number" name="duration" onChange={handleChange} value={input.duration ?? ''} required />
             </div>
             <div className="input-container">
-              <label htmlFor="interestRate">
-                Interest rate<sup className="text-red-700">*</sup>
-              </label>
-              <input
-                type="text"
-                name="interestRate"
-                value={detail?.interestRate}
-                readOnly
-                disabled
-              />
+                <label htmlFor="start_date">
+                  Start date<sup className="text-red-700">*</sup>{" "}
+                </label>
+              <input type="date" name="start_date" onChange={handleChange} value={input.start_date} required />
             </div>
             <div className="input-container">
-              <label htmlFor="interestLoanAmount">
-                Loan amount upon interest<sup className="text-red-700">*</sup>
+                <label htmlFor="first_repayment_date">
+                  First repayment date<sup className="text-red-700">*</sup>{" "}
+                </label>
+              <input type="date" name="first_repayment_date" onChange={handleChange} value={input.first_repayment_date} required />
+            </div>
+            <div className="input-container">
+              <label htmlFor="latest_payslip">
+                Latest payslip (JPEG, PNG, or PDF)
               </label>
-              {/* <NumericFormat
-                thousandSeparator={true}
-                decimalScale={2}
-                fixedDecimalScale={true} */}
-                <input
-                name="interestLoanAmount"
-                readOnly
-                disabled
-                // value={new Intl.NumberFormat("en-US", {
-                //   minimumFractionDigits: 2,
-                // }).format(
-                //   // Number(input?.loanAmount?.replace(/,/g, "")) + totalInterest
-                // )}
+              <input 
+                type="file" 
+                name="latest_payslip" 
+                onChange={handleFileChange} 
+                accept=".jpg,.jpeg,.png,.pdf" 
               />
             </div>
         </div>
