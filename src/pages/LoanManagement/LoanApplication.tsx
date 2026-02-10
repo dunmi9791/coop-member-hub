@@ -2,6 +2,7 @@ import { Input } from '@/components/ui/input';
 import api from '@/hooks/api';
 import { UserContext } from '@/hooks/AuthContext';
 import React, {useState, useEffect, useContext} from 'react'
+import { useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/use-toast"
 import { NumericFormat } from 'react-number-format';
 
@@ -29,6 +30,7 @@ interface Input{
   });
   const [products, setProducts] = useState<Products[]>([]);
   const {credentials} = useContext(UserContext)
+  const navigate = useNavigate();
 
 const handleChange =(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>)=>{
     const name = e.target.name;
@@ -86,32 +88,41 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const resp = await api.post('/api/portal/new_loan', payload)
       const result = resp.data.result;
       
-      toast({ 
-        title: result?.status === 'success' || !result?.status ? "Success!" : "Notice",
-        description: result?.message || 'Loan application was successful',
-        variant: "default"
-      })
-      
       if (result?.status === 'success' || !result?.status) {
-        setInput({
-          loanAmount: null,
-          type_id: null,
-          start_date: '',
-          first_repayment_date: '',
-          duration: null,
-          latest_payslip: null,
-        })
+        navigate('/dashboard/loans/result', { 
+          state: { 
+            status: 'success', 
+            message: result?.message || 'Loan application was successful',
+            details: {
+              loanAmount: input.loanAmount,
+              duration: input.duration,
+              start_date: input.start_date,
+              first_repayment_date: input.first_repayment_date
+            }
+          } 
+        });
+      } else {
+        navigate('/dashboard/loans/result', { 
+          state: { 
+            status: 'error', 
+            message: result?.message || 'Notice',
+            error: result?.message
+          } 
+        });
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.error?.message || 
                            error.response?.data?.message || 
                            error.message || 
                            "An error occurred during loan application";
-      toast({
-        title: "Error!",
-        description: errorMessage,
-        variant: "destructive",
-      })
+      
+      navigate('/dashboard/loans/result', { 
+        state: { 
+          status: 'error', 
+          message: 'Error!',
+          error: errorMessage
+        } 
+      });
     }
   }
 
@@ -196,9 +207,9 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               />
             </div>
         </div>
-        <div className="flex justify-end gap-5 p-5 bg-[#1985B3] rounded-b-[18px]">
+          <div className="flex justify-end gap-5 p-5 bg-[#1985B3] rounded-b-[18px]">
           <button type="submit" className='apply-btn'>Apply</button>
-          <button type="button" className='discard-btn'>Discard</button>
+          <button type="button" onClick={() => navigate('/dashboard/loans')} className='discard-btn'>Discard</button>
         </div>
       </div>
       </form>

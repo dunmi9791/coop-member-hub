@@ -98,6 +98,9 @@ const Loans = () => {
       <Scroller>
         <div className='flex gap-5 items-center mb-5 border-b border-b-primary/20'>
           <Link to='' className={pathname === '/dashboard/loans' ? 'active-selector bg-gradient-primary' : 'inactive'}>
+            LPP details
+          </Link>
+          <Link to='apply' className={pathname === '/dashboard/loans/apply' ? 'active-selector bg-gradient-primary' : 'inactive'}>
             Apply for loan
           </Link>
           <Link to='loan-requests' className={pathname.includes('loans/loan-requests') ? 'active-selector bg-gradient-primary' : 'inactive'}>

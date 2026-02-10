@@ -16,6 +16,8 @@ import Loans from "./pages/LoanManagement/Loans";
 import Investments from "./pages/InvestmentManagement/Investments";
 import Statements from "./pages/Statements/Statements";
 import LoanApplication from "./pages/LoanManagement/LoanApplication";
+import LPPDetails from "./pages/LoanManagement/LPPDetails";
+import LoanResult from "./pages/LoanManagement/LoanResult";
 
 import SharesPortfolio from "./pages/InvestmentManagement/SharesPortfolio";
 import SharesWithdrawalRequests from "./pages/InvestmentManagement/SharesWithdrawalRequests";
@@ -124,8 +126,10 @@ const App = () => {
               />
 
                 <Route path="/dashboard/loans" element={<Loans />}>
-             <Route index element={<LoanApplication/>}/>
+             <Route index element={<LPPDetails/>}/>
+             <Route path='apply' element={<LoanApplication/>}/>
              <Route path='loan-requests' element={<LoanRequests/>}/>
+             <Route path='result' element={<LoanResult/>}/>
              </Route>
              <Route path="/dashboard/investments" element={<Investments />} >
              <Route path="/dashboard/investments" element={<SharesPortfolio/>}>
