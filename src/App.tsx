@@ -44,6 +44,7 @@ import RescheduleSavings from "./pages/RescheduleSavings";
 import RealEstateInvestment from "./pages/RealEstateInvestment/RealEstateInvestment";
 import AvailableInvestments from "./pages/RealEstateInvestment/AvailableInvestments";
 import MyInvestments from "./pages/RealEstateInvestment/MyInvestments";
+import InvestmentDetails from "./pages/RealEstateInvestment/InvestmentDetails";
 
 
 
@@ -157,6 +158,7 @@ const App = () => {
              <Route path="/dashboard/real-estate" element={<RealEstateInvestment />}>
                <Route index element={<AvailableInvestments />} />
                <Route path="my-investments" element={<MyInvestments />} />
+               <Route path=":id" element={<InvestmentDetails />} />
              </Route>
              <Route path="/dashboard/profile" element={<MemberProfile/>}/>
              <Route path="/dashboard/settings" element={<Settings/>}/>

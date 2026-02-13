@@ -1,19 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Building2, MapPin, TrendingUp, Calendar, Users } from 'lucide-react'
+import { Building2, MapPin, TrendingUp, Calendar, Users, Loader2 } from 'lucide-react'
 import { toast } from '@/components/ui/use-toast'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { fetchActiveProjects, RealEstateProject } from '@/services/realEstateApi'
 
 interface Investment {
   id: number
@@ -30,64 +22,47 @@ interface Investment {
 }
 
 const AvailableInvestments = () => {
-  const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null)
-  const [subscribeDialogOpen, setSubscribeDialogOpen] = useState(false)
-  const [units, setUnits] = useState(1)
+  const navigate = useNavigate()
+  const [investments, setInvestments] = useState<Investment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const investments: Investment[] = [
-    {
-      id: 1,
-      name: 'Lekki Gardens Phase 3',
-      location: 'Lekki, Lagos',
-      type: 'Residential',
-      minimumInvestment: 500000,
-      expectedReturn: 25,
-      duration: '24 months',
-      totalSlots: 100,
-      availableSlots: 45,
-      image: '/placeholder.svg',
-      status: 'open',
-    },
-    {
-      id: 2,
-      name: 'Abuja Metro Plaza',
-      location: 'Wuse, Abuja',
-      type: 'Commercial',
-      minimumInvestment: 1000000,
-      expectedReturn: 30,
-      duration: '36 months',
-      totalSlots: 50,
-      availableSlots: 12,
-      image: '/placeholder.svg',
-      status: 'closing_soon',
-    },
-    {
-      id: 3,
-      name: 'Port Harcourt Towers',
-      location: 'GRA, Port Harcourt',
-      type: 'Mixed Use',
-      minimumInvestment: 750000,
-      expectedReturn: 22,
-      duration: '18 months',
-      totalSlots: 80,
-      availableSlots: 60,
-      image: '/placeholder.svg',
-      status: 'open',
-    },
-    {
-      id: 4,
-      name: 'Ibadan Industrial Park',
-      location: 'Ibadan, Oyo',
-      type: 'Industrial',
-      minimumInvestment: 2000000,
-      expectedReturn: 35,
-      duration: '48 months',
-      totalSlots: 30,
-      availableSlots: 28,
-      image: '/placeholder.svg',
-      status: 'open',
-    },
-  ]
+  useEffect(() => {
+    const loadInvestments = async () => {
+      try {
+        setLoading(true)
+        const response = await fetchActiveProjects()
+        
+        if (response.error) {
+          setError(response.error.message)
+          return
+        }
+
+        const mappedInvestments: Investment[] = response.result.projects.map((project: RealEstateProject) => ({
+          id: project.id,
+          name: project.name,
+          location: typeof project.location === 'string' ? project.location : 'N/A',
+          type: project.type,
+          minimumInvestment: 0, // Not provided in API sample, defaulting to 0
+          expectedReturn: 0, // Not provided in API sample, defaulting to 0
+          duration: 'N/A', // Not provided in API sample, defaulting to N/A
+          totalSlots: project.total_units || 0,
+          availableSlots: project.available_units || 0,
+          image: project.picture_url || '/placeholder.svg',
+          status: (project.available_units || 0) > 0 ? 'open' : 'closed',
+        }))
+
+        setInvestments(mappedInvestments)
+      } catch (err) {
+        setError('Failed to load investments. Please try again later.')
+        console.error('Error loading investments:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadInvestments()
+  }, [])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -111,20 +86,34 @@ const AvailableInvestments = () => {
   }
 
   const handleSubscribe = (investment: Investment) => {
-    setSelectedInvestment(investment)
-    setUnits(1)
-    setSubscribeDialogOpen(true)
+    navigate(`/dashboard/real-estate/${investment.id}`)
   }
 
-  const confirmSubscription = () => {
-    if (selectedInvestment) {
-      toast({
-        title: 'Subscription Successful!',
-        description: `You have subscribed to ${selectedInvestment.name} with ${units} unit(s) worth ${formatCurrency(selectedInvestment.minimumInvestment * units)}`,
-      })
-      setSubscribeDialogOpen(false)
-      setSelectedInvestment(null)
-    }
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 text-primary animate-spin mb-4" />
+        <p className="text-muted-foreground">Loading investments...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-destructive mb-4">{error}</p>
+        <Button onClick={() => window.location.reload()}>Retry</Button>
+      </div>
+    )
+  }
+
+  if (investments.length === 0) {
+    return (
+      <div className="text-center py-20">
+        <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <p className="text-muted-foreground">No active real estate investments available at the moment.</p>
+      </div>
+    )
   }
 
   return (
@@ -203,60 +192,6 @@ const AvailableInvestments = () => {
           </Card>
         ))}
       </div>
-
-      <Dialog open={subscribeDialogOpen} onOpenChange={setSubscribeDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Subscribe to Investment</DialogTitle>
-            <DialogDescription>
-              {selectedInvestment && (
-                <>You are about to subscribe to <strong>{selectedInvestment.name}</strong></>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedInvestment && (
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Minimum Investment</p>
-                  <p className="font-semibold">{formatCurrency(selectedInvestment.minimumInvestment)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Expected Return</p>
-                  <p className="font-semibold text-green-600">{selectedInvestment.expectedReturn}% p.a.</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="units">Number of Units</Label>
-                <Input
-                  id="units"
-                  type="number"
-                  min={1}
-                  max={selectedInvestment.availableSlots}
-                  value={units}
-                  onChange={(e) => setUnits(Number(e.target.value))}
-                />
-              </div>
-              <div className="bg-muted p-4 rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Total Investment</span>
-                  <span className="text-xl font-bold text-primary">
-                    {formatCurrency(selectedInvestment.minimumInvestment * units)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSubscribeDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={confirmSubscription}>
-              Confirm Subscription
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
