@@ -17,6 +17,7 @@ import Investments from "./pages/InvestmentManagement/Investments";
 import Statements from "./pages/Statements/Statements";
 import LoanApplication from "./pages/LoanManagement/LoanApplication";
 import LPPDetails from "./pages/LoanManagement/LPPDetails";
+import ActiveLoans from "./pages/LoanManagement/ActiveLoans";
 import LoanResult from "./pages/LoanManagement/LoanResult";
 
 import SharesPortfolio from "./pages/InvestmentManagement/SharesPortfolio";
@@ -39,6 +40,7 @@ import Withdrawal from "./pages/Withdrawal/Withdrawal";
 import WithdrawalIndex from "./pages/Withdrawal/WithdrawalIndex";
 
 import LoanRequests from "./pages/LoanManagement/LoanRequests";
+import LoanCalculator from "./pages/LoanManagement/LoanCalculator";
 import InitiateWithdrawal from "./pages/Withdrawal/InitiateWithdrawal";
 import RescheduleSavings from "./pages/RescheduleSavings";
 import RealEstateInvestment from "./pages/RealEstateInvestment/RealEstateInvestment";
@@ -128,8 +130,10 @@ const App = () => {
 
                 <Route path="/dashboard/loans" element={<Loans />}>
              <Route index element={<LPPDetails/>}/>
+             <Route path='active-loans' element={<ActiveLoans/>}/>
              <Route path='apply' element={<LoanApplication/>}/>
              <Route path='loan-requests' element={<LoanRequests/>}/>
+             <Route path='loan-calculator' element={<LoanCalculator/>}/>
              <Route path='result' element={<LoanResult/>}/>
              </Route>
              <Route path="/dashboard/investments" element={<Investments />} >

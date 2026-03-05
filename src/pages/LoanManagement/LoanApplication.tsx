@@ -8,23 +8,19 @@ import { NumericFormat } from 'react-number-format';
 
 const LoanApplication = () => {
 interface Products{
-    productCode: number;
-    productName: string
+    id: number;
+    name: string
 }
 
 interface Input{
     loanAmount: number | null,
     type_id: number | null,
-    start_date: string,
-    first_repayment_date: string,
     duration: number | null,
     latest_payslip: string | null,
 }
   const [input, setInput] = useState <Input>({
     loanAmount: null,
     type_id: null,
-    start_date: '',
-    first_repayment_date: '',
     duration: null,
     latest_payslip: null,
   });
@@ -71,15 +67,23 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
   const onSubmit = async(e)=>{
     e.preventDefault()
+
+    if (!credentials?.partner_id) {
+      toast({
+        title: "Error",
+        description: "User session not found. Please log in again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const payload ={
       jsonrpc: '2.0',
       method: 'call',
       params: {
-        partner_id: Number(credentials?.partner_id),
+        partner_id: Number(credentials.partner_id),
         type_id: Number(input.type_id),
         amount: input.loanAmount,
-        start_date: input.start_date,
-        first_repayment_date: input.first_repayment_date,
         duration: Number(input.duration),
         latest_payslip: input.latest_payslip
       }
@@ -96,8 +100,6 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             details: {
               loanAmount: input.loanAmount,
               duration: input.duration,
-              start_date: input.start_date,
-              first_repayment_date: input.first_repayment_date
             }
           } 
         });
@@ -184,24 +186,13 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               <input type="number" name="duration" onChange={handleChange} value={input.duration ?? ''} required />
             </div>
             <div className="input-container">
-                <label htmlFor="start_date">
-                  Start date<sup className="text-red-700">*</sup>{" "}
-                </label>
-              <input type="date" name="start_date" onChange={handleChange} value={input.start_date} required />
-            </div>
-            <div className="input-container">
-                <label htmlFor="first_repayment_date">
-                  First repayment date<sup className="text-red-700">*</sup>{" "}
-                </label>
-              <input type="date" name="first_repayment_date" onChange={handleChange} value={input.first_repayment_date} required />
-            </div>
-            <div className="input-container">
               <label htmlFor="latest_payslip">
-                Latest payslip (JPEG, PNG, or PDF)
+                Latest payslip (JPEG, PNG, or PDF)<sup className="text-red-700">*</sup>
               </label>
               <input 
                 type="file" 
                 name="latest_payslip" 
+                required
                 onChange={handleFileChange} 
                 accept=".jpg,.jpeg,.png,.pdf" 
               />

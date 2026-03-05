@@ -61,11 +61,6 @@ const LoanResult = () => {
                 <div className="text-muted-foreground">Duration:</div>
                 <div className="font-medium">{details.duration} Months</div>
 
-                <div className="text-muted-foreground">Start Date:</div>
-                <div className="font-medium">{details.start_date}</div>
-
-                <div className="text-muted-foreground">First Repayment:</div>
-                <div className="font-medium">{details.first_repayment_date}</div>
               </div>
             </div>
           )}

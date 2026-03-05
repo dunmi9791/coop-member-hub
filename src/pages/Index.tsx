@@ -90,11 +90,15 @@ const {details, setDetails} =useContext(UserContext)
   };
 
   const fetchMemberDetails= async()=>{
+    if (!user?.partner_id) return;
+
     const requestPayload = {
       "jsonrpc": "2.0",
       "method": "call",
       "id": 1,
-      "params": {}
+      "params": {
+        "partner_id": user.partner_id
+      }
     };
     
     try {
@@ -115,9 +119,11 @@ const {details, setDetails} =useContext(UserContext)
     }
   }
 
-  useEffect(()=>{
-fetchMemberDetails()
-  }, [])
+  useEffect(() => {
+    if (user?.partner_id) {
+      fetchMemberDetails();
+    }
+  }, [user]);
 
    if (!user) {
     return <div>Loading...</div>;
