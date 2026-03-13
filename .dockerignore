@@ -1,3 +1,4 @@
+# node_modules
 node_modules
 dist
 .git
@@ -6,5 +7,5 @@ dist
 Dockerfile
 docker-compose.yml
 # nginx.conf
-package-lock.json
-bun.lockb
+# package-lock.json
+# bun.lockb

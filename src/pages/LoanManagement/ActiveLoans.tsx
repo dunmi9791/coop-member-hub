@@ -51,7 +51,7 @@ const ActiveLoans = () => {
   // Adjustment state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState<ActiveLoan | null>(null);
-  const [adjustmentType, setAdjustmentType] = useState<'topup' | 'restructure'>('topup');
+  const [adjustmentType, setAdjustmentType] = useState<'topup' | 'restructure' | 'offset_savings'>('topup');
   const [amount, setAmount] = useState<number>(0);
   const [newLoanType, setNewLoanType] = useState<string>('');
   const [newTenureMonths, setNewTenureMonths] = useState<number>(0);
@@ -59,6 +59,8 @@ const ActiveLoans = () => {
   const [newAprPercent, setNewAprPercent] = useState<number>(0);
   const [reason, setReason] = useState<string>('');
   const [loanTypes, setLoanTypes] = useState<LoanType[]>([]);
+  const [savingsAccounts, setSavingsAccounts] = useState<any[]>([]);
+  const [selectedSavingsAccountId, setSelectedSavingsAccountId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -100,9 +102,27 @@ const ActiveLoans = () => {
       }
     };
 
+    const fetchSavingsAccounts = async () => {
+      try {
+        const payload = {
+          jsonrpc: '2.0',
+          method: 'call',
+          id: 1,
+          params: {}
+        };
+        const resp = await api.post('/api/portal/savings_overview', payload);
+        if (resp.data.result && resp.data.result.accounts) {
+          setSavingsAccounts(resp.data.result.accounts);
+        }
+      } catch (error) {
+        console.error('Error fetching savings accounts:', error);
+      }
+    };
+
     if (credentials?.partner_id) {
       fetchActiveLoans();
       fetchLoanTypes();
+      fetchSavingsAccounts();
     } else {
         // Fallback or demo data
         setLoans([
@@ -131,6 +151,7 @@ const ActiveLoans = () => {
     setRateMode('keep');
     setNewAprPercent(0); // This could be initialized to current loan APR if available
     setReason('');
+    setSelectedSavingsAccountId('');
     setIsDialogOpen(true);
   };
 
@@ -139,45 +160,61 @@ const ActiveLoans = () => {
     
     setSubmitting(true);
     try {
-      const payload = {
-        jsonrpc: '2.0',
-        method: 'call',
-        params: {
-          loan_id: selectedLoan.id,
-          member_id: credentials.partner_id,
-          adjustment_type: adjustmentType,
-          topup_amount: adjustmentType === 'topup' ? amount : null,
-          loan_type_id: adjustmentType === 'restructure' && newLoanType ? Number(newLoanType) : null,
-          new_tenure_months: adjustmentType === 'restructure' && newTenureMonths > 0 ? newTenureMonths : null,
-          rate_mode: adjustmentType === 'restructure' ? rateMode : 'keep',
-          new_apr_percent: adjustmentType === 'restructure' && rateMode === 'keep' && newAprPercent > 0 ? newAprPercent : null,
-          reason: reason || null,
-        },
-        id: 1,
-      };
+      let response;
+      if (adjustmentType === 'offset_savings') {
+        const payload = {
+          jsonrpc: '2.0',
+          method: 'call',
+          params: {
+            loan_id: selectedLoan.id,
+            member_id: credentials.partner_id,
+            savings_account_id: Number(selectedSavingsAccountId),
+            amount: amount,
+          },
+          id: 1,
+        };
+        response = await api.post('/api/portal/loan_offset_request', payload);
+      } else {
+        const payload = {
+          jsonrpc: '2.0',
+          method: 'call',
+          params: {
+            loan_id: selectedLoan.id,
+            member_id: credentials.partner_id,
+            adjustment_type: adjustmentType,
+            topup_amount: adjustmentType === 'topup' ? amount : null,
+            loan_type_id: adjustmentType === 'restructure' && newLoanType ? Number(newLoanType) : null,
+            new_tenure_months: adjustmentType === 'restructure' && newTenureMonths > 0 ? newTenureMonths : null,
+            rate_mode: adjustmentType === 'restructure' ? rateMode : 'keep',
+            new_apr_percent: adjustmentType === 'restructure' && rateMode === 'keep' && newAprPercent > 0 ? newAprPercent : null,
+            reason: reason || null,
+          },
+          id: 1,
+        };
+        response = await api.post('/api/portal/loan_adjustment/create', payload);
+      }
 
-      const resp = await api.post('/api/portal/loan_adjustment/create', payload);
-      const result = resp.data.result;
+      const result = response.data.result;
 
       if (result?.status === 'success' || result?.success) {
         toast({
           title: "Success",
-          description: result?.message || "Loan adjustment submitted successfully",
+          description: result?.message || "Loan request submitted successfully",
         });
         setIsDialogOpen(false);
       } else {
         toast({
           variant: "destructive",
           title: "Error",
-          description: result?.message || "Failed to submit loan adjustment",
+          description: result?.message || "Failed to submit loan request",
         });
       }
     } catch (error) {
-      console.error('Error submitting loan adjustment:', error);
+      console.error('Error submitting loan request:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "An unexpected error occurred while submitting the loan adjustment",
+        description: "An unexpected error occurred while submitting the loan request",
       });
     } finally {
       setSubmitting(false);
@@ -277,7 +314,7 @@ const ActiveLoans = () => {
               <Label htmlFor="adjustment-type">Adjustment Type</Label>
               <Select 
                 value={adjustmentType} 
-                onValueChange={(value: 'topup' | 'restructure') => setAdjustmentType(value)}
+                onValueChange={(value: 'topup' | 'restructure' | 'offset_savings') => setAdjustmentType(value)}
               >
                 <SelectTrigger id="adjustment-type">
                   <SelectValue placeholder="Select type" />
@@ -285,6 +322,7 @@ const ActiveLoans = () => {
                 <SelectContent>
                   <SelectItem value="topup">Top Up</SelectItem>
                   <SelectItem value="restructure">Restructure</SelectItem>
+                  <SelectItem value="offset_savings">Offset with Savings</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -302,6 +340,39 @@ const ActiveLoans = () => {
                   placeholder="Enter amount"
                 />
               </div>
+            ) : adjustmentType === 'offset_savings' ? (
+              <>
+                <div className="grid gap-2">
+                  <Label htmlFor="savings-account">Savings Account (Required)</Label>
+                  <Select 
+                    value={selectedSavingsAccountId} 
+                    onValueChange={setSelectedSavingsAccountId}
+                  >
+                    <SelectTrigger id="savings-account">
+                      <SelectValue placeholder="Select savings account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {savingsAccounts.map((account) => (
+                        <SelectItem key={account.id} value={String(account.id)}>
+                          {account.display_name} ({new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(account.balance)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="amount">Offset Amount (Required)</Label>
+                  <NumericFormat
+                    id="amount"
+                    customInput={Input}
+                    thousandSeparator={true}
+                    prefix={'₦'}
+                    value={amount}
+                    onValueChange={(values) => setAmount(Number(values.value))}
+                    placeholder="Enter amount"
+                  />
+                </div>
+              </>
             ) : (
               <>
                 <div className="grid gap-2">
@@ -380,7 +451,11 @@ const ActiveLoans = () => {
             <Button 
               type="submit" 
               onClick={handleSubmit} 
-              disabled={submitting || (adjustmentType === 'topup' ? amount <= 0 : (!newLoanType || (rateMode === 'keep' && newAprPercent <= 0)))}
+              disabled={submitting || (
+                adjustmentType === 'topup' ? amount <= 0 : 
+                adjustmentType === 'offset_savings' ? (amount <= 0 || !selectedSavingsAccountId) :
+                (!newLoanType || (rateMode === 'keep' && newAprPercent <= 0))
+              )}
               className="bg-[#043d73] hover:bg-[#032d56]"
             >
               {submitting ? (

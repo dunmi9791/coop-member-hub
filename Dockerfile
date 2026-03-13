@@ -1,13 +1,13 @@
 # Build stage
-FROM node:20-slim AS build
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies (using npm ci for faster, more reliable builds)
+RUN npm ci
 
 # Copy source code
 COPY . .
