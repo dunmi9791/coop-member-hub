@@ -49,34 +49,35 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-export default function DataTable({shareData}) {
+interface Investment {
+  id: number;
+  reference: string;
+  certificate_number: string;
+  investment_type: string;
+  amount: number;
+  currency: string;
+  start_date: string;
+  maturity_date: string;
+  days_to_maturity: number;
+  status: string;
+  interest_rate: number;
+  tenor: string;
+}
+
+export default function DataTable({ data }: { data: Investment[] }) {
   const [search, setSearch] = React.useState("")
-  const [shareType, setShareType] = React.useState("")
-  const [status, setStatus] = React.useState("")
-  const [unit, setUnit] = React.useState("")
-  const [date, setDate] = React.useState("")
   const [page, setPage] = React.useState(1)
-  const rowsPerPage = 5
+  const rowsPerPage = 10
 
   // Filter + Search
-  const filteredData = shareData.filter((item) => {
+  const filteredData = data.filter((item) => {
     const matchesSearch =
       search === "" ||
       Object.values(item).some((val) =>
         String(val).toLowerCase().includes(search.toLowerCase())
       )
-    const matchesShareType = shareType === "" || item.shareType === shareType
-    const matchesStatus = status === "" || item.status === status
-    const matchesUnit = unit === "" || item.unit === Number(unit)
-    const matchesDate = date === "" || item.date === date
 
-    return (
-      matchesSearch &&
-      matchesShareType &&
-      matchesStatus &&
-      matchesUnit &&
-      matchesDate
-    )
+    return matchesSearch
   })
 
   const pageCount = Math.ceil(filteredData.length / rowsPerPage) || 1
@@ -85,60 +86,21 @@ export default function DataTable({shareData}) {
     page * rowsPerPage
   )
 
-  // Reset to page 1 when filters/search change
+  // Reset to page 1 when search changes
   React.useEffect(() => {
     setPage(1)
-  }, [search, shareType, status, unit, date])
+  }, [search])
 
   return (
     <div className="space-y-4">
-      {/* Search & Filters */}
+      {/* Search */}
       <div className="flex flex-wrap gap-2">
         <Input
-          placeholder="Search (type, unit, amount, status, date)…"
+          placeholder="Search investments..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full"
         />
-
-        {/* <Select value={shareType} onValueChange={setShareType}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Share Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Ordinary">Ordinary</SelectItem>
-            <SelectItem value="Preference">Preference</SelectItem>
-            <SelectItem value="Bonus">Bonus</SelectItem>
-          </SelectContent>
-        </Select> */}
-
-        {/* <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Active">Active</SelectItem>
-            <SelectItem value="Pending">Pending</SelectItem>
-            <SelectItem value="Approved">Approved</SelectItem>
-            <SelectItem value="Rejected">Rejected</SelectItem>
-            <SelectItem value="Closed">Closed</SelectItem>
-          </SelectContent>
-        </Select> */}
-
-        {/* <Input
-          type="number"
-          placeholder="Unit"
-          value={unit}
-          onChange={(e) => setUnit(e.target.value)}
-          className="w-[120px]"
-        />
-
-        <Input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="w-[180px]"
-        /> */}
       </div>
 
       {/* Table */}
@@ -146,10 +108,11 @@ export default function DataTable({shareData}) {
         <TableHeader>
           <TableRow>
             <TableHead>S/N</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Share Type</TableHead>
-            <TableHead>Unit</TableHead>
+            <TableHead>Reference</TableHead>
+            <TableHead>Type</TableHead>
             <TableHead>Amount</TableHead>
+            <TableHead>Start Date</TableHead>
+            <TableHead>Maturity Date</TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
@@ -158,17 +121,27 @@ export default function DataTable({shareData}) {
             paginatedData.map((item, index) => (
               <TableRow key={item.id}>
                 <TableCell>{(page - 1) * rowsPerPage + index + 1}</TableCell>
-                <TableCell>{item.date}</TableCell>
-                <TableCell>{item.shareType}</TableCell>
-                <TableCell>{item.unit.toLocaleString()}</TableCell>
-                <TableCell>{item.amount.toLocaleString()}</TableCell>
+                <TableCell>
+                  <div className="font-medium text-primary">{item.reference}</div>
+                  <div className="text-xs text-muted-foreground">{item.certificate_number}</div>
+                </TableCell>
+                <TableCell>{item.investment_type}</TableCell>
+                <TableCell>
+                  {new Intl.NumberFormat('en-NG', {
+                    style: 'currency',
+                    currency: item.currency || 'NGN',
+                    minimumFractionDigits: 0,
+                  }).format(item.amount)}
+                </TableCell>
+                <TableCell>{item.start_date}</TableCell>
+                <TableCell>{item.maturity_date}</TableCell>
                 <TableCell><StatusBadge status={item.status} /></TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="text-center">
-                No data found
+              <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                No investments found
               </TableCell>
             </TableRow>
           )}
