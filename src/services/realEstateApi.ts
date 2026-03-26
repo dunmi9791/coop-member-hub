@@ -63,10 +63,10 @@ export const fetchProjectUnits = async (projectId: number): Promise<{ result: { 
     return {
       result: {
         units: [
-          { id: 1, name: 'Unit A1', price: 25000000, status: 'available', square_meters: 120, floor: '1st Floor' },
-          { id: 2, name: 'Unit A2', price: 27500000, status: 'available', square_meters: 130, floor: '1st Floor' },
-          { id: 3, name: 'Unit B1', price: 30000000, status: 'sold', square_meters: 150, floor: '2nd Floor' },
-          { id: 4, name: 'Unit B2', price: 32000000, status: 'available', square_meters: 160, floor: '2nd Floor' },
+          { id: 1, name: 'Unit A1', number: 'A1', house_type: false, state: 'available', unit_price: 25000000, currency: { id: 120, name: 'NGN', symbol: '₦' } },
+          { id: 2, name: 'Unit A2', number: 'A2', house_type: false, state: 'available', unit_price: 27500000, currency: { id: 120, name: 'NGN', symbol: '₦' } },
+          { id: 3, name: 'Unit B1', number: 'B1', house_type: false, state: 'sold', unit_price: 30000000, currency: { id: 120, name: 'NGN', symbol: '₦' } },
+          { id: 4, name: 'Unit B2', number: 'B2', house_type: false, state: 'available', unit_price: 32000000, currency: { id: 120, name: 'NGN', symbol: '₦' } },
         ]
       }
     };
