@@ -1,4 +1,4 @@
-import { useState } from "react";
+import nlngLogo from "@/assets/nlng_logo.jpg";
 import { 
   Home, 
   Wallet, 
