@@ -3,20 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import api from "@/hooks/api";
 import { UserContext } from "@/hooks/AuthContext";
 import { toast } from "sonner";
-
-// Using placeholder for logo - you can upload your NLNG COOP logo to src/assets/
-
-// const DEMO_CREDENTIALS = [
-//   { email: "member@nlng.coop", password: "demo123", role: "Member" },
-//   { email: "admin@nlng.coop", password: "admin123", role: "Admin" },
-//   { email: "officer@nlng.coop", password: "officer123", role: "Loan Officer" }
-// ];
+import nlngLogo from "@/assets/nlng_logo.jpg";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -25,136 +17,125 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const {setCredentials} =useContext(UserContext)
+  const { setCredentials } = useContext(UserContext);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(""); // Clear any previous errors
-    
-    const payload ={
-    jsonrpc: "2.0",
-    method: "call",
-    params: {
+    setError("");
+
+    const payload = {
+      jsonrpc: "2.0",
+      method: "call",
+      params: {
         db: "ngml_corp",
-        login: email, 
+        login: email,
         password: password,
-        context: {}
-    },
-}
+        context: {},
+      },
+    };
+
     try {
-      const resp = await api.post('/web/session/authenticate', payload, {
-        withCredentials: true // Enable cookies for session management
+      const resp = await api.post("/web/session/authenticate", payload, {
+        withCredentials: true,
       });
-      
-      // Check if authentication was successful
+
       if (resp.data?.result && resp.data.result.uid) {
-        // Store the complete result data
-        sessionStorage.setItem('user', JSON.stringify(resp.data.result));
-        
-        // Also store session info separately for easy access
+        sessionStorage.setItem("user", JSON.stringify(resp.data.result));
         const sessionInfo = {
           session_id: resp.data.result.session_id,
           uid: resp.data.result.uid,
           db: resp.data.result.db,
           user_context: resp.data.result.user_context,
           name: resp.data.result.name,
-          username: resp.data.result.username
+          username: resp.data.result.username,
         };
-        sessionStorage.setItem('session_info', JSON.stringify(sessionInfo));
-        
+        sessionStorage.setItem("session_info", JSON.stringify(sessionInfo));
         setCredentials(resp.data.result);
-        navigate('/dashboard');
+        navigate("/dashboard");
       } else {
-        // Authentication failed - show error message
-        const errorMessage = resp.data?.error?.data?.message || resp.data?.error?.message || 'Invalid email or password. Please try again.';
+        const errorMessage =
+          resp.data?.error?.data?.message ||
+          resp.data?.error?.message ||
+          "Invalid email or password. Please try again.";
         setError(errorMessage);
         toast(errorMessage);
       }
-      
       setIsLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       setIsLoading(false);
-      let errorMessage = 'An error occurred during login. Please try again.';
-      
+      let errorMessage = "An error occurred during login. Please try again.";
       if (error?.response?.status === 400) {
-        errorMessage = error.response.data.message || 'Invalid credentials. Please check your email and password.';
+        errorMessage =
+          error.response.data.message ||
+          "Invalid credentials. Please check your email and password.";
       } else if (error?.message) {
-        errorMessage = error.message.includes('Network Error') ? 'Network error. Please check your connection and try again.' : error.message;
+        errorMessage = error.message.includes("Network Error")
+          ? "Network error. Please check your connection and try again."
+          : error.message;
       }
-      
       setError(errorMessage);
       toast(errorMessage);
     }
-    // // Check demo credentials
-    // const user = DEMO_CREDENTIALS.find(
-    //   cred => cred.email === email && cred.password === password
-    // );
-    
-        // Store user info in localStorage for demo purposes
-       
   };
 
-  // const fillDemoCredentials = (credentials: typeof DEMO_CREDENTIALS[0]) => {
-  //   setEmail(credentials.email);
-  //   setPassword(credentials.password);
-  //   setError("");
-  // };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-background p-4">
-      <Card className="w-full max-w-md shadow-elevated">
-        <CardHeader className="space-y-6 text-center">
-          <div className="flex justify-center">
-            <div className="h-16 w-16 bg-gradient-primary rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-lg">NLNG</span>
+    <div className="min-h-screen flex">
+      {/* Left Panel - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-primary relative overflow-hidden flex-col items-center justify-center p-12">
+        {/* Decorative shapes */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-10">
+          <div className="absolute top-10 left-10 w-64 h-64 rounded-full border-2 border-white/30" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full border-2 border-white/20" />
+          <div className="absolute top-1/3 right-1/4 w-48 h-48 rounded-full border border-white/20" />
+        </div>
+
+        <div className="relative z-10 text-center space-y-8 max-w-md">
+          <div className="bg-white rounded-3xl p-6 w-36 h-36 mx-auto flex items-center justify-center shadow-lg">
+            <img src={nlngLogo} alt="NLNG COOP Logo" className="w-28 h-28 object-contain" />
+          </div>
+          <div className="space-y-3">
+            <h1 className="text-2xl font-bold text-white leading-tight">
+              NLNG Staff Cooperative
+            </h1>
+            <p className="text-lg text-white/80 font-medium">
+              Investment & Credit Society Limited
+            </p>
+          </div>
+          <div className="w-16 h-0.5 bg-accent mx-auto rounded-full" />
+          <p className="text-white/70 text-sm leading-relaxed">
+            Empowering members through cooperative savings, investments, and credit facilities for a brighter financial future.
+          </p>
+        </div>
+      </div>
+
+      {/* Right Panel - Login Form */}
+      <div className="flex-1 flex items-center justify-center bg-background p-6 sm:p-12">
+        <div className="w-full max-w-md space-y-8">
+          {/* Mobile logo */}
+          <div className="lg:hidden flex flex-col items-center space-y-3">
+            <div className="bg-white rounded-2xl p-4 w-24 h-24 flex items-center justify-center shadow-card">
+              <img src={nlngLogo} alt="NLNG COOP Logo" className="w-20 h-20 object-contain" />
             </div>
+            <p className="text-sm font-medium text-muted-foreground">NLNG Staff Cooperative</p>
           </div>
-          <div>
-            <CardTitle className="text-2xl font-bold text-foreground">
-              Welcome Back
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Sign in to your cooperative account
-            </CardDescription>
+
+          <div className="space-y-2">
+            <h2 className="text-3xl font-bold text-foreground tracking-tight">Welcome Back</h2>
+            <p className="text-muted-foreground">Sign in to your cooperative account</p>
           </div>
-        </CardHeader>
-        
-        <CardContent>
-          {/* <div className="mb-6">
-            <Alert>
-              <AlertDescription>
-                <strong>Demo Credentials:</strong>
-                <div className="grid grid-cols-1 gap-2 mt-2">
-                  {DEMO_CREDENTIALS.map((cred, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      size="sm"
-                      className="justify-start text-xs h-8"
-                      onClick={() => fillDemoCredentials(cred)}
-                    >
-                      {cred.role}: {cred.email}
-                    </Button>
-                  ))}
-                </div>
-              </AlertDescription>
-            </Alert>
-          </div>*/}
 
           {error && (
-            <div className="mb-4">
-              <Alert variant="destructive">
-                <AlertDescription>
-                  {error}
-                </AlertDescription>
-              </Alert>
-            </div>
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email" className="text-sm font-medium">
+                Email Address
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -162,15 +143,17 @@ const Login = () => {
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
-                  if (error) setError(""); // Clear error when user starts typing
+                  if (error) setError("");
                 }}
                 required
-                className="h-11"
+                className="h-12 rounded-xl bg-muted/50 border-border focus:border-primary"
               />
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sm font-medium">
+                Password
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -179,16 +162,16 @@ const Login = () => {
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
-                    if (error) setError(""); // Clear error when user starts typing
+                    if (error) setError("");
                   }}
                   required
-                  className="h-11 pr-10"
+                  className="h-12 rounded-xl bg-muted/50 border-border pr-12 focus:border-primary"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-11 px-3 py-2 hover:bg-transparent"
+                  className="absolute right-1 top-1 h-10 w-10 p-0 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -202,33 +185,38 @@ const Login = () => {
 
             <div className="flex items-center justify-between">
               <Label className="flex items-center space-x-2 text-sm cursor-pointer">
-                <input type="checkbox" className="rounded border-input" />
-                <span>Remember me</span>
+                <input type="checkbox" className="rounded border-input accent-primary" />
+                <span className="text-muted-foreground">Remember me</span>
               </Label>
-              <Button variant="link" className="px-0 font-normal text-sm">
+              <Button variant="link" className="px-0 font-medium text-sm text-primary">
                 Forgot password?
               </Button>
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full h-11 bg-gradient-primary"
+            <Button
+              type="submit"
+              className="w-full h-12 rounded-xl bg-gradient-primary text-lg font-semibold shadow-elevated hover:opacity-95 transition-all"
               disabled={isLoading}
             >
-              {isLoading ? "Signing in..." : "Sign In"}
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Signing in...
+                </span>
+              ) : (
+                "Sign In"
+              )}
             </Button>
           </form>
-          
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Button variant="link" className="px-0 font-normal">
-                Contact your cooperative
-              </Button>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+
+          <p className="text-center text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Button variant="link" className="px-0 font-medium text-primary">
+              Contact your cooperative
+            </Button>
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
