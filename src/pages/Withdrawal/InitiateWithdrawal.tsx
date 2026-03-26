@@ -1,28 +1,86 @@
 import api from "@/hooks/api";
 import { UserContext } from "@/hooks/AuthContext";
-import { MoveLeft } from "lucide-react";
-import { useContext, useState } from "react";
+import { MoveLeft, Loader2 } from "lucide-react";
+import React, { useContext, useState, useEffect } from "react";
 import { NumericFormat } from "react-number-format";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast"
 
 
 interface Input {
-  account: string;
+  savings_account_id: string;
   amount: number;
   reason: string;
+  bank_account_id: string;
 }
 
 const InitiateWithdrawal = () => {
-  const [accounts, setAccounts] = useState<any[]>([]);
-  const [modes, setModes] = useState<any[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
+  const [savingsAccounts, setSavingsAccounts] = useState<any[]>([]);
+  const [loadingBanks, setLoadingBanks] = useState(false);
+  const [loadingSavings, setLoadingSavings] = useState(false);
   const [input, setInput] = useState<Input>({
-    account: "",
-    amount: null,
+    savings_account_id: "",
+    amount: 0,
     reason: "",
+    bank_account_id: "",
   });
-  const {details} = useContext(UserContext)
+  const { credentials, details } = useContext(UserContext)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const fetchSavingsAccounts = async () => {
+      setLoadingSavings(true);
+      try {
+        const payload = {
+          jsonrpc: "2.0",
+          method: "call",
+          id: 1,
+          params: {},
+        };
+        const response = await api.post("/api/portal/savings_overview", payload);
+        if (response.data?.result?.accounts) {
+          const accounts = response.data.result.accounts;
+          setSavingsAccounts(accounts);
+          if (accounts.length > 0) {
+            setInput(prev => ({ ...prev, savings_account_id: accounts[0].id.toString() }));
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching savings overview:", err);
+      } finally {
+        setLoadingSavings(false);
+      }
+    };
+
+    fetchSavingsAccounts();
+  }, []);
+
+  useEffect(() => {
+    const fetchBankAccounts = async () => {
+      if (!credentials?.partner_id) return;
+      setLoadingBanks(true);
+      try {
+        const payload = {
+          jsonrpc: '2.0',
+          method: 'call',
+          params: {
+            partner_id: credentials.partner_id
+          }
+        }
+        const resp = await api.post('/api/portal/bank_accounts', payload);
+        if (resp?.data?.result) {
+          setBankAccounts(resp.data.result);
+        }
+      } catch (error) {
+        console.error("Error fetching bank accounts:", error);
+      } finally {
+        setLoadingBanks(false);
+      }
+    };
+
+    fetchBankAccounts();
+  }, [credentials]);
 
   const handleChange = (e) => {
     const name = e.target.name;
@@ -32,28 +90,38 @@ const InitiateWithdrawal = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault()
-    const payload={
-      savings_account_id: input.account,
+    const payload = {
+      savings_account_id: input.savings_account_id,
       amount: input.amount,
-      reason: input.reason
+      reason: input.reason,
+      bank_account_id: input.bank_account_id
     }
-    try{
-   const resp= await api.post('/api/portal/withdrawal', payload)
-   toast({ 
-      title: "Success!",
-      description: 'Withdrawal application was successful',
-      variant: "default"
+    try {
+      const resp = await api.post('/api/portal/withdrawal', payload)
+      toast({
+        title: "Success!",
+        description: 'Withdrawal application was successful',
+        variant: "default"
       })
       setInput({
         ...input,
-        amount: null,
-       reason : null
+        amount: 0,
+        reason: ""
       })
       setTimeout(() => {
         navigate(-1)
       }, 3000);
-    } catch (error) {}
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: 'Withdrawal application failed',
+        variant: "destructive"
+      })
+    }
   };
+
+  const selectedSavingsAccount = savingsAccounts.find(acc => acc.id.toString() === input.savings_account_id);
+
   return (
     <>
       <form onSubmit={onSubmit} className="mt-4">
@@ -73,11 +141,44 @@ const InitiateWithdrawal = () => {
               <label htmlFor="savings_account_id">
                 Account number<sup className="text-red-700">*</sup>
               </label>
-              <input
+              <select
                 name="savings_account_id"
-                disabled
-                value={details?.savings.primary_account_number}
-             />
+                required
+                value={input.savings_account_id}
+                onChange={handleChange}
+                className="w-full p-2 border rounded-md"
+                disabled={loadingSavings}
+              >
+                {loadingSavings ? (
+                  <option>Loading accounts...</option>
+                ) : (
+                  savingsAccounts.map((acc) => (
+                    <option key={acc.id} value={acc.id}>
+                      {acc.account_number} ({acc.product.name})
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+            <div className="input-container">
+              <label htmlFor="bank_account_id">
+                Bank account to be remitted<sup className="text-red-700">*</sup>
+              </label>
+              <select
+                name="bank_account_id"
+                required
+                value={input.bank_account_id}
+                onChange={handleChange}
+                className="w-full p-2 border rounded-md"
+                disabled={loadingBanks}
+              >
+                <option value="">Select bank account</option>
+                {bankAccounts.map((bank) => (
+                  <option key={bank.id} value={bank.id}>
+                    {bank.bank_name} - {bank.account_number}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="input-container">
               <label htmlFor="amount">
@@ -91,8 +192,12 @@ const InitiateWithdrawal = () => {
                 name="amount"
                 thousandSeparator
                 required
-                onChange={handleChange}
-                value={input.amount ?? ""}
+                onValueChange={(values) => {
+                  const { value } = values;
+                  setInput({ ...input, amount: parseFloat(value) || 0 });
+                }}
+                value={input.amount || ""}
+                className="w-full p-2 border rounded-md"
               />
             </div>
             <div className="input-container">
@@ -125,9 +230,10 @@ const InitiateWithdrawal = () => {
             </div>
             <div className="d-flex flex-column p-3 gap-3">
               <div className="d-flex gap-3">
-                <span className="key">Current account balance: </span>
-                {/* <span className="value" style={{fontWeight:'500'}}>{new Intl.NumberFormat('en-US',
-                       {minimumFractionDigits:2}).format(detail?.accountBalance)}</span> */}
+                <span className="key font-medium">Current account balance: </span>
+                <span className="value font-bold text-primary">
+                  NGN {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(selectedSavingsAccount?.balance || 0)}
+                </span>
               </div>
             </div>
           </div>

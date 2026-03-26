@@ -41,7 +41,11 @@ export interface MemberDashboardResponse {
   investments: {
     total_investment: number;
   };
-    recent_activities: RecentActivity[];
+  recent_activities: RecentActivity[];
+  notifications?: {
+    unread_count: number;
+    items: any[];
+  };
 }
 
 export interface RecentActivity {
@@ -65,42 +69,31 @@ export interface LoanItem {
 
 const Index = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
-const {details, setDetails} =useContext(UserContext)
+  const { details, setDetails, credentials } = useContext(UserContext);
 
   useEffect(() => {
-    const demoUser = sessionStorage.getItem('user');
-    if (!demoUser) {
+    if (!credentials) {
       navigate('/');
       return;
     }
-    setUser(JSON.parse(demoUser));
-  }, [navigate]);
+  }, [credentials, navigate]);
 
- 
-  const memberData = {
-    name: user?.role === "Admin" ? "Admin User" : user?.role === "Loan Officer" ? "John Okafor" : "Sarah Adebayo",
-    membershipId: user?.role === "Admin" ? "ADM-2020-0001" : user?.role === "Loan Officer" ? "OFF-2020-1002" : "MEM-2020-4521",
-    savingsBalance: "₦1,250,000",
-    loanBalance: "₦85,000",
-    investments: [
-      { name: "Agricultural Bond", amount: "₦300,000", growth: "+12%" },
-      { name: "Cooperative Shares", amount: "₦150,000", growth: "+8%" }
-    ]
-  };
-
-  const fetchMemberDetails= async()=>{
-    if (!user?.partner_id) return;
+  const fetchMemberDetails = async () => {
+    if (!credentials?.partner_id) {
+      console.warn('Cannot fetch member details: partner_id is missing', credentials);
+      return;
+    }
 
     const requestPayload = {
       "jsonrpc": "2.0",
       "method": "call",
       "id": 1,
       "params": {
-        "partner_id": user.partner_id
+        "partner_id": credentials.partner_id
       }
     };
     
+    console.log('Fetching dashboard details for partner_id:', credentials.partner_id);
     try {
       // Try to call the actual API endpoint first
       const response = await api.post('/api/portal/dashboard', requestPayload);
@@ -120,12 +113,12 @@ const {details, setDetails} =useContext(UserContext)
   }
 
   useEffect(() => {
-    if (user?.partner_id) {
+    if (credentials?.partner_id) {
       fetchMemberDetails();
     }
-  }, [user]);
+  }, [credentials]);
 
-   if (!user) {
+  if (!credentials) {
     return <div>Loading...</div>;
   }
 
@@ -156,17 +149,26 @@ const recentActivities =
         sign = "-";
         break;
 
+      case "loan_repayment":
+        icon = <ArrowDownRight className="h-4 w-4 text-orange-600" />;
+        uiType = "withdrawal";
+        title = "Loan Repayment";
+        sign = "-";
+        break;
+
       default:
         icon = <TrendingUp className="h-4 w-4 text-gray-500" />;
         uiType = "investment";
         title = activity.type.replace(/_/g, " ");
     }
 
-    const formattedDate = new Date(activity.date).toLocaleDateString("en-US", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    const formattedDate = activity.date && !isNaN(new Date(activity.date).getTime())
+      ? new Date(activity.date).toLocaleDateString("en-US", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "N/A";
 
     return {
       icon,
@@ -186,6 +188,7 @@ const recentActivities =
         <DashboardHeader 
           memberName={details?.member?.name}
           membershipId={details?.member?.member_id}
+          memberSince={details?.member?.member_since}
         />
         
         {/* Financial Overview Cards */}
@@ -273,17 +276,23 @@ const recentActivities =
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
-              {recentActivities.map((activity, index) => (
-                <ActivityItem
-                  key={index}
-                  icon={activity.icon}
-                  title={activity.title}
-                  description={activity.description}
-                  amount={activity.amount}
-                  time={activity.time}
-                  type={activity.type}
-                />
-              ))}
+              {recentActivities.length > 0 ? (
+                recentActivities.map((activity, index) => (
+                  <ActivityItem
+                    key={index}
+                    icon={activity.icon}
+                    title={activity.title}
+                    description={activity.description}
+                    amount={activity.amount}
+                    time={activity.time}
+                    type={activity.type}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-10 text-muted-foreground">
+                  <p>No recent activities found.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

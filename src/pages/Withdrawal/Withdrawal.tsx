@@ -1,15 +1,41 @@
 import { Card } from '@/components/ui/card';
 import DataTable from '@/components/ui/data-table';
-import React,{useState, useContext, useMemo, useEffect} from 'react'
+import React, { useState, useContext, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom';
+import { UserContext } from '@/hooks/AuthContext';
+import api from '@/hooks/api';
+import { Loader2 } from 'lucide-react';
 
 const Withdrawal = () => {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [pageCount, setPageCount] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [pageNumber, setPageNumber] = useState(0)
-  const fetchIdRef = React.useRef(0);
+  const [loading, setLoading] = useState(true);
+  const { credentials } = useContext(UserContext);
+
+  const fetchWithdrawalHistory = async () => {
+    if (!credentials?.partner_id) return;
+    setLoading(true);
+    try {
+      const payload = {
+        jsonrpc: '2.0',
+        method: 'call',
+        params: {
+          partner_id: credentials.partner_id
+        }
+      }
+      const resp = await api.post('/api/portal/withdrawal_history', payload);
+      if (resp?.data?.result) {
+        setData(resp.data.result);
+      }
+    } catch (error) {
+      console.error("Error fetching withdrawal history:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchWithdrawalHistory();
+  }, [credentials]);
 
  
   const column = [
@@ -44,24 +70,24 @@ const Withdrawal = () => {
 
   const columns = useMemo(() => column, []);
 
- const WithdrawalData = [
-  { id: 1, date: "2025-08-01", shareType: "Ordinary",   unit: 10, amount: 500,  status: "Active" },
-  { id: 2, date: "2025-08-05", shareType: "Preference", unit: 20, amount: 1200, status: "Pending" },
-  { id: 3, date: "2025-08-10", shareType: "Ordinary",   unit: 5,  amount: 250,  status: "Active" },
-  { id: 4, date: "2025-08-12", shareType: "Preference", unit: 15, amount: 900,  status: "Closed" },
-  { id: 5, date: "2025-08-15", shareType: "Ordinary",   unit: 30, amount: 1500, status: "Approved" },
-  { id: 6, date: "2025-08-18", shareType: "Preference", unit: 8,  amount: 400,  status: "Rejected" },
-]
   return (
     <>
-    <div className="flex justify-between items-center flex-wrap mb-4">
-    <h3 className='header-title'>Withdrawal requests</h3>
-    <Link to='initiate-withdrawal' className='apply-btn' style={{textDecoration:'none'}}>
-    Initiate withdrawal</Link>
-     </div>
-       <Card className="p-5 rounded-xl">
-            <DataTable shareData={WithdrawalData}/>
-        </Card>
+      <h3 className='header-title mb-4'>Withdrawal requests</h3>
+      <Card className="p-5 rounded-xl mb-6">
+        {loading ? (
+          <div className="flex justify-center p-10">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <DataTable shareData={data} columns={columns} />
+        )}
+      </Card>
+      <div className="flex justify-start">
+        <Link to='initiate-withdrawal' className='apply-btn' style={{ textDecoration: 'none' }}>
+          Initiate withdrawal
+        </Link>
+      </div>
     </>
-  )}
+  )
+}
 export default Withdrawal

@@ -64,13 +64,15 @@ interface Investment {
   tenor: string;
 }
 
-export default function DataTable({ data }: { data: Investment[] }) {
+export default function DataTable({ data = [], shareData, columns }: { data?: Investment[], shareData?: any[], columns?: any[] }) {
   const [search, setSearch] = React.useState("")
   const [page, setPage] = React.useState(1)
   const rowsPerPage = 10
 
+  const tableData = data.length > 0 ? data : (shareData || []);
+
   // Filter + Search
-  const filteredData = data.filter((item) => {
+  const filteredData = tableData.filter((item) => {
     const matchesSearch =
       search === "" ||
       Object.values(item).some((val) =>
@@ -96,7 +98,7 @@ export default function DataTable({ data }: { data: Investment[] }) {
       {/* Search */}
       <div className="flex flex-wrap gap-2">
         <Input
-          placeholder="Search investments..."
+          placeholder="Search..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full"
@@ -104,49 +106,73 @@ export default function DataTable({ data }: { data: Investment[] }) {
       </div>
 
       {/* Table */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>S/N</TableHead>
-            <TableHead>Reference</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Start Date</TableHead>
-            <TableHead>Maturity Date</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedData.length > 0 ? (
-            paginatedData.map((item, index) => (
-              <TableRow key={item.id}>
-                <TableCell>{(page - 1) * rowsPerPage + index + 1}</TableCell>
-                <TableCell>
-                  <div className="font-medium text-primary">{item.reference}</div>
-                  <div className="text-xs text-muted-foreground">{item.certificate_number}</div>
-                </TableCell>
-                <TableCell>{item.investment_type}</TableCell>
-                <TableCell>
-                  {new Intl.NumberFormat('en-NG', {
-                    style: 'currency',
-                    currency: item.currency || 'NGN',
-                    minimumFractionDigits: 0,
-                  }).format(item.amount)}
-                </TableCell>
-                <TableCell>{item.start_date}</TableCell>
-                <TableCell>{item.maturity_date}</TableCell>
-                <TableCell><StatusBadge status={item.status} /></TableCell>
-              </TableRow>
-            ))
-          ) : (
+      <div className="rounded-md border overflow-x-auto">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-                No investments found
-              </TableCell>
+              {columns ? (
+                columns.map((col, i) => (
+                  <TableHead key={i}>{col.Header}</TableHead>
+                ))
+              ) : (
+                <>
+                  <TableHead>S/N</TableHead>
+                  <TableHead>Reference</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Start Date</TableHead>
+                  <TableHead>Maturity Date</TableHead>
+                  <TableHead>Status</TableHead>
+                </>
+              )}
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {paginatedData.length > 0 ? (
+              paginatedData.map((item, index) => (
+                <TableRow key={item.id || index}>
+                  {columns ? (
+                    columns.map((col, i) => (
+                      <TableCell key={i}>
+                        {col.Cell ? col.Cell({ 
+                          value: item[col.accessor], 
+                          cell: { row: { index: index } },
+                          state: { pageIndex: page - 1, pageSize: rowsPerPage }
+                        }) : item[col.accessor]}
+                      </TableCell>
+                    ))
+                  ) : (
+                    <>
+                      <TableCell>{(page - 1) * rowsPerPage + index + 1}</TableCell>
+                      <TableCell>
+                        <div className="font-medium text-primary">{item.reference}</div>
+                        <div className="text-xs text-muted-foreground">{item.certificate_number}</div>
+                      </TableCell>
+                      <TableCell>{item.investment_type}</TableCell>
+                      <TableCell>
+                        {new Intl.NumberFormat('en-NG', {
+                          style: 'currency',
+                          currency: item.currency || 'NGN',
+                          minimumFractionDigits: 0,
+                        }).format(item.amount)}
+                      </TableCell>
+                      <TableCell>{item.start_date}</TableCell>
+                      <TableCell>{item.maturity_date}</TableCell>
+                      <TableCell><StatusBadge status={item.status} /></TableCell>
+                    </>
+                  )}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns ? columns.length : 7} className="text-center py-10 text-muted-foreground">
+                  No records found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Pagination */}
       {pageCount > 1 && (

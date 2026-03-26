@@ -49,8 +49,8 @@ const Login = () => {
       
       // Check if authentication was successful
       if (resp.data?.result && resp.data.result.uid) {
-        // Store the complete session data
-        sessionStorage.setItem('user', JSON.stringify(resp.data));
+        // Store the complete result data
+        sessionStorage.setItem('user', JSON.stringify(resp.data.result));
         
         // Also store session info separately for easy access
         const sessionInfo = {

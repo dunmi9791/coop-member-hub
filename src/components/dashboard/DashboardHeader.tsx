@@ -6,10 +6,13 @@ import heroImage from "@/assets/cooperative-hero.jpg";
 interface DashboardHeaderProps {
   memberName: string;
   membershipId: string;
+  memberSince?: string;
 }
 
-const today = new Date()
-export function DashboardHeader({ memberName, membershipId }: DashboardHeaderProps) {
+export function DashboardHeader({ memberName, membershipId, memberSince }: DashboardHeaderProps) {
+  const formattedMemberSince = (memberSince && memberSince !== "false" && memberSince !== "N/A")
+    ? new Date(memberSince).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    : "January 2020";
   return (
     <div className="relative overflow-hidden rounded-2xl bg-gradient-primary text-primary-foreground mb-8">
       <div 
@@ -48,19 +51,14 @@ export function DashboardHeader({ memberName, membershipId }: DashboardHeaderPro
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-center">
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
             <p className="text-primary-foreground/70 text-sm">Member Since</p>
-            <p className="text-lg font-semibold">January 2020</p>
+            <p className="text-lg font-semibold">{formattedMemberSince}</p>
           </div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-primary-foreground/70 text-sm">Last Contribution</p>
-            <p className="text-lg font-semibold">₦50,000</p>
-            <span>25/08/2025</span>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-primary-foreground/70 text-sm">Role</p>
-            <p className="text-lg font-semibold">Accountant</p>
+            <p className="text-primary-foreground/70 text-sm">Member ID</p>
+            <p className="text-lg font-semibold">{membershipId}</p>
           </div>
         </div>
       </div>
