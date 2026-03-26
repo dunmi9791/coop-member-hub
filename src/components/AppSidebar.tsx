@@ -1,4 +1,4 @@
-import { useState } from "react";
+import nlngLogo from "@/assets/nlng_logo.jpg";
 import { 
   Home, 
   Wallet, 
@@ -66,9 +66,7 @@ export function AppSidebar() {
       <SidebarContent>
         <div className="p-4">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">N</span>
-            </div>
+            <img src={nlngLogo} alt="NLNG COOP" className="h-8 w-8 rounded-lg object-cover" />
             {!collapsed && (
               <div>
                 <h2 className="font-semibold text-sidebar-foreground">NLNG COOP</h2>
