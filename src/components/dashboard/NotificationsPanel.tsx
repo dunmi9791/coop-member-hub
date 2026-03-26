@@ -4,45 +4,40 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 interface Notification {
-  id: string;
-  type: "info" | "success" | "warning" | "action";
+  id: number;
+  message_id: number;
   title: string;
-  message: string;
-  time: string;
-  actionLabel?: string;
+  body: string;
+  date: string;
+  is_read: boolean;
+  notification_type: string;
+  notification_status: string;
+  failure_type: any;
+  model: string;
+  res_id: number;
+  author: string;
 }
 
 interface NotificationsPanelProps {
   notifications?: {
     unread_count: number;
-    items: any[];
+    count: number;
+    items: Notification[];
   };
 }
 
 export function NotificationsPanel({ notifications }: NotificationsPanelProps) {
   const getIcon = (type: string) => {
     switch (type) {
-      case "success":
-        return <CheckCircle className="h-4 w-4" />;
-      case "warning":
-      case "action":
+      case "email":
+        return <FileText className="h-4 w-4" />;
+      case "sms":
         return <AlertCircle className="h-4 w-4" />;
       default:
         return <FileText className="h-4 w-4" />;
     }
   };
 
-  const getBadgeVariant = (type: string) => {
-    switch (type) {
-      case "success":
-        return "default";
-      case "warning":
-      case "action":
-        return "destructive";
-      default:
-        return "secondary";
-    }
-  };
 
   const notificationItems = notifications?.items || [];
   const unreadCount = notifications?.unread_count || 0;
@@ -70,26 +65,27 @@ export function NotificationsPanel({ notifications }: NotificationsPanelProps) {
               className="flex items-start gap-3 p-4 rounded-lg border border-border/50 bg-background/50 hover:bg-muted/50 transition-smooth"
             >
               <div className={`p-1 rounded-full ${
-                notification.type === "success" ? "text-success" :
-                notification.type === "action" ? "text-accent" : "text-primary"
+                notification.notification_status === "sent" ? "text-success" : "text-primary"
               }`}>
-                {getIcon(notification.type)}
+                {getIcon(notification.notification_type)}
               </div>
               <div className="flex-1 min-w-0">
                 <h4 className="font-medium text-sm leading-tight">{notification.title}</h4>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  {notification.message}
-                </p>
+                <div 
+                  className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2"
+                  dangerouslySetInnerHTML={{ __html: notification.body }}
+                />
                 <div className="flex items-center justify-between mt-3">
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {notification.time}
+                    {notification.date && !isNaN(new Date(notification.date).getTime())
+                      ? new Date(notification.date).toLocaleDateString("en-US", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : notification.date}
                   </span>
-                  {notification.actionLabel && (
-                    <Button size="sm" variant="outline" className="h-7 text-xs">
-                      {notification.actionLabel}
-                    </Button>
-                  )}
                 </div>
               </div>
             </div>
