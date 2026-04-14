@@ -2,16 +2,51 @@ import api from "@/hooks/api";
 import { UserContext } from "@/hooks/AuthContext";
 import React, { useContext, useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Wallet, TrendingUp, CreditCard, Calculator, Edit2, Save, X } from "lucide-react";
+import { Wallet, TrendingUp, CreditCard, Calculator, Edit2, Save, X, Building2, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface Bank {
+  id: number;
+  name: string;
+}
+
+interface BankAccount {
+  acc_number: string;
+  bank_name: string;
+  acc_holder_name: string;
+}
 
 const MemberProfile = () => {
   const { credentials } = useContext(UserContext);
   const [profile, setProfile] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+  const [banks, setBanks] = useState<Bank[]>([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [isAddBankModalOpen, setIsAddBankModalOpen] = useState(false);
+  const [isSubmittingBank, setIsSubmittingBank] = useState(false);
+  const [newBankForm, setNewBankForm] = useState({
+    bank_id: "",
+    acc_number: "",
+    acc_holder_name: ""
+  });
   const [editForm, setEditForm] = useState({
     gender: "",
     date_of_birth: "",
@@ -69,10 +104,48 @@ const MemberProfile = () => {
     }
   }
 
+  const fetchBankAccounts = async () => {
+    if (!credentials?.partner_id) return;
+
+    const payload = {
+      jsonrpc: '2.0',
+      method: 'call',
+      params: {
+        partner_id: credentials.partner_id
+      }
+    }
+    try {
+      const resp = await api.post('/api/portal/bank_accounts', payload);
+      if (resp?.data?.result?.success) {
+        setBankAccounts(resp.data.result.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching bank accounts:", error);
+    }
+  }
+
+  const fetchBanks = async () => {
+    const payload = {
+      jsonrpc: '2.0',
+      method: 'call',
+      params: {}
+    }
+    try {
+      const resp = await api.post('/api/portal/banks', payload);
+      if (resp?.data?.result?.success) {
+        setBanks(resp.data.result.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching banks:", error);
+    }
+  }
+
   useEffect(() => {
     if (credentials?.partner_id) {
       fetchProfileDetails();
       fetchDashboardDetails();
+      fetchBankAccounts();
+      fetchBanks();
     }
   }, [credentials])
 
@@ -94,6 +167,68 @@ const MemberProfile = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEditForm(prev => ({ ...prev, [name]: value }));
+  }
+
+  const handleBankInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewBankForm(prev => ({ ...prev, [name]: value }));
+  }
+
+  const handleAddBank = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!credentials?.partner_id) return;
+
+    if (!newBankForm.bank_id || !newBankForm.acc_number || !newBankForm.acc_holder_name) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "All fields are required.",
+      });
+      return;
+    }
+
+    setIsSubmittingBank(true);
+    const payload = {
+      jsonrpc: '2.0',
+      method: 'call',
+      id: 1,
+      params: {
+        bank_id: parseInt(newBankForm.bank_id),
+        account_number: newBankForm.acc_number
+      }
+    }
+
+    try {
+      const resp = await api.post('/api/portal/create_bank_account', payload);
+      if (resp?.data?.result?.success || resp?.data?.result?.status === "success") {
+        toast({
+          title: "Bank Account Added",
+          description: "Your bank account has been successfully added.",
+        });
+        setIsAddBankModalOpen(false);
+        setNewBankForm({
+          bank_id: "",
+          acc_number: "",
+          acc_holder_name: ""
+        });
+        fetchBankAccounts();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: resp?.data?.result?.message || "There was an error adding your bank account.",
+        });
+      }
+    } catch (error) {
+      console.error("Error adding bank account:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again later.",
+      });
+    } finally {
+      setIsSubmittingBank(false);
+    }
   }
 
   const handleSave = async () => {
@@ -342,6 +477,109 @@ const MemberProfile = () => {
             </Card>
           </div>
         </div>
+
+        {/* Bank Accounts */}
+        <div className="p-6 bg-white rounded-2xl shadow col-span-1 md:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Bank Accounts</h2>
+            </div>
+            <Button 
+              size="sm" 
+              onClick={() => setIsAddBankModalOpen(true)}
+              className="flex items-center gap-1"
+            >
+              <Plus className="h-4 w-4" /> Add Account
+            </Button>
+          </div>
+          {bankAccounts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {bankAccounts.map((account, index) => (
+                <Card key={index} className="border-primary/10">
+                  <CardContent className="p-4">
+                    <p className="text-sm font-medium text-foreground">{account.acc_holder_name}</p>
+                    <p className="text-lg font-bold text-primary">{account.acc_number}</p>
+                    <p className="text-sm text-muted-foreground">{account.bank_name}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm italic">No bank accounts found.</p>
+          )}
+        </div>
+
+      <Dialog open={isAddBankModalOpen} onOpenChange={setIsAddBankModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Bank Account</DialogTitle>
+            <DialogDescription>
+              Enter the details of your bank account below.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddBank} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Account Holder Name</label>
+              <Input
+                name="acc_holder_name"
+                value={newBankForm.acc_holder_name}
+                onChange={handleBankInputChange}
+                placeholder="Full Name"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Bank Name</label>
+              <Select
+                value={newBankForm.bank_id}
+                onValueChange={(value) => setNewBankForm(prev => ({ ...prev, bank_id: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a bank" />
+                </SelectTrigger>
+                <SelectContent>
+                  {banks.map((bank) => (
+                    <SelectItem key={bank.id} value={bank.id.toString()}>
+                      {bank.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Account Number</label>
+              <Input
+                name="acc_number"
+                value={newBankForm.acc_number}
+                onChange={handleBankInputChange}
+                placeholder="Account Number"
+                required
+              />
+            </div>
+            <DialogFooter className="pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsAddBankModalOpen(false)}
+                disabled={isSubmittingBank}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmittingBank}>
+                {isSubmittingBank ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  "Add Account"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       </div>
     </div>
   );

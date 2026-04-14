@@ -86,6 +86,10 @@ const AvailableInvestments = () => {
   }
 
   const handleSubscribe = (investment: Investment) => {
+    navigate(`/dashboard/real-estate/subscribe/${investment.id}`)
+  }
+
+  const handleMoreDetails = (investment: Investment) => {
     navigate(`/dashboard/real-estate/${investment.id}`)
   }
 
@@ -180,7 +184,14 @@ const AvailableInvestments = () => {
                 </div>
               </div>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col gap-2">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => handleMoreDetails(investment)}
+              >
+                More Details
+              </Button>
               <Button
                 className="w-full"
                 onClick={() => handleSubscribe(investment)}

@@ -1,11 +1,28 @@
 import api from '@/hooks/api';
 
+export interface RealEstateMilestone {
+  id: number;
+  name: string;
+  sequence: number;
+  percentage: number;
+  description: string;
+}
+
 export interface RealEstateProject {
   id: number;
   name: string;
   type: string;
   location: string | boolean;
   picture_url: string | null;
+  main_picture_url?: string | boolean;
+  gallery_urls?: string[];
+  photo_gallery?: {
+    id: number;
+    name: string;
+    mimetype: string;
+    url: string;
+  }[];
+  map_location_url?: string;
   code?: string;
   currency?: {
     id: number;
@@ -14,8 +31,10 @@ export interface RealEstateProject {
   };
   total_units?: number;
   available_units?: number;
+  description?: string;
   next_milestone?: string | boolean;
   estimated_completion_date?: string | boolean;
+  milestone_template?: RealEstateMilestone[];
 }
 
 export interface RealEstateUnit {
@@ -97,6 +116,24 @@ export const fetchProjectDetails = async (projectId: number): Promise<ProjectDet
 
   try {
     const response = await api.post('/api/portal/real_estate/project_details', requestBody);
+    
+    // Normalize the response if it matches the structure where data is nested
+    if (response.data?.result?.project) {
+      return response.data;
+    }
+
+    if (response.data?.result?.data) {
+      return {
+        jsonrpc: response.data.jsonrpc,
+        id: response.data.id,
+        result: {
+          project: response.data.result.data,
+          units: response.data.result.units || [],
+          unit_count: response.data.result.unit_count || (response.data.result.units ? response.data.result.units.length : 0)
+        }
+      };
+    }
+    
     return response.data;
   } catch (error) {
     // Return mock data for now if API fails
@@ -110,6 +147,18 @@ export const fetchProjectDetails = async (projectId: number): Promise<ProjectDet
           type: 'Residential',
           location: 'Lekki Phase 1, Lagos',
           picture_url: null,
+          gallery_urls: [
+            'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+            'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+            'https://images.unsplash.com/photo-1560448204-61dc36dc98c8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+          ],
+          map_location_url: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3964.728551469375!2d3.4354228!3d6.4353051!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103bf5306d15e297%3A0xc3f83f2a832669e4!2sLekki%20Phase%201%2C%20Lagos!5e0!3m2!1sen!2sng!4v1711612345678!5m2!1sen!2sng',
+          description: 'Experience luxury living at its finest in the Premium Waterfront Estate. Located in the heart of Lekki Phase 1, this project offers breathtaking waterfront views, state-of-the-art amenities, and unparalleled architectural design. Perfect for both investment and a dream home, this estate is where modern elegance meets serene coastal charm.',
+          milestone_template: [
+            { id: 1, name: "Foundations", sequence: 1, percentage: 20, description: "Laying the groundwork" },
+            { id: 2, name: "Structural", sequence: 2, percentage: 30, description: "Building the frame" },
+            { id: 3, name: "Finishing", sequence: 3, percentage: 50, description: "Final touches" }
+          ]
         },
         units: [
           { 

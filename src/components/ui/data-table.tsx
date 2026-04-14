@@ -29,7 +29,7 @@ import {
 
 
 // ✅ Styled status badge
-function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status }: { status: string }) {
   const key = status.toLowerCase()
   const style =
     key === "active"
@@ -136,6 +136,7 @@ export default function DataTable({ data = [], shareData, columns }: { data?: In
                       <TableCell key={i}>
                         {col.Cell ? col.Cell({ 
                           value: item[col.accessor], 
+                          item: item,
                           cell: { row: { index: index } },
                           state: { pageIndex: page - 1, pageSize: rowsPerPage }
                         }) : item[col.accessor]}

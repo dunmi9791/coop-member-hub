@@ -1,3 +1,4 @@
+import { Wallet, TrendingUp, CreditCard, Calculator, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input';
 import api from '@/hooks/api';
 import { UserContext } from '@/hooks/AuthContext';
@@ -12,19 +13,37 @@ interface Products{
     name: string
 }
 
+interface BankAccount {
+    id: number;
+    acc_number: string;
+    account_holder_name: string;
+    bank_name: string;
+    bank_bic: string;
+    currency_id: number;
+    currency_name: string;
+    partner_id: number;
+    partner_name: string;
+}
+
 interface Input{
     loanAmount: number | null,
     type_id: number | null,
     duration: number | null,
     latest_payslip: string | null,
+    payout_option: 'pay_to_coop_saving' | 'pay_to_bank_account' | null,
+    payout_bank_id: number | null,
 }
+  const [submitting, setSubmitting] = useState(false);
   const [input, setInput] = useState <Input>({
     loanAmount: null,
     type_id: null,
     duration: null,
     latest_payslip: null,
+    payout_option: null,
+    payout_bank_id: null,
   });
   const [products, setProducts] = useState<Products[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const {credentials} = useContext(UserContext)
   const navigate = useNavigate();
 
@@ -60,9 +79,32 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       }
       await api.post('/api/portal/loan_types', payload).then(resp=>setProducts(resp.data.result.loan_types))
     }
+
+    const fetchBankAccounts = async () => {
+      try {
+        const payload = {
+          jsonrpc: '2.0',
+          method: 'call',
+          id: 1,
+          params: {
+            partner_id: credentials?.partner_id,
+          }
+        }
+        const resp = await api.post('/api/portal/bank_accounts', payload)
+        if (resp.data.result?.success) {
+          setBankAccounts(resp.data.result.data)
+        }
+      } catch (error) {
+        console.error('Error fetching bank accounts:', error)
+      }
+    }
+
   useEffect(()=>{
   fetchProducts()
-  }, [])
+  if (credentials?.partner_id) {
+    fetchBankAccounts()
+  }
+  }, [credentials])
   
 
   const onSubmit = async(e)=>{
@@ -77,6 +119,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       return;
     }
 
+    setSubmitting(true);
     const payload ={
       jsonrpc: '2.0',
       method: 'call',
@@ -85,14 +128,21 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         type_id: Number(input.type_id),
         amount: input.loanAmount,
         duration: Number(input.duration),
-        latest_payslip: input.latest_payslip
+        latest_payslip: input.latest_payslip,
+        payout_option: input.payout_option,
+        payout_bank_id: input.payout_option === 'pay_to_bank_account' ? Number(input.payout_bank_id) : null,
       }
     }
     try {
       const resp = await api.post('/api/portal/new_loan', payload)
       const result = resp.data.result;
       
-      if (result?.status === 'success' || !result?.status) {
+      // The API might return { ok: false, error: "..." } or similar
+      const isOk = result?.ok !== false && (result?.status === 'success' || !result?.status);
+      const errorMessage = result?.error || result?.message || 'Notice';
+
+      if (isOk) {
+        setSubmitting(false);
         navigate('/dashboard/loans/result', { 
           state: { 
             status: 'success', 
@@ -104,15 +154,17 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           } 
         });
       } else {
+        setSubmitting(false);
         navigate('/dashboard/loans/result', { 
           state: { 
             status: 'error', 
-            message: result?.message || 'Notice',
-            error: result?.message
+            message: errorMessage,
+            error: errorMessage
           } 
         });
       }
     } catch (error: any) {
+      setSubmitting(false);
       const errorMessage = error.response?.data?.error?.message || 
                            error.response?.data?.message || 
                            error.message || 
@@ -186,6 +238,41 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               <input type="number" name="duration" onChange={handleChange} value={input.duration ?? ''} required />
             </div>
             <div className="input-container">
+              <label htmlFor="payout_option">
+                Payout option<sup className="text-red-700">*</sup>
+              </label>
+              <select
+                name="payout_option"
+                required
+                onChange={handleChange}
+                value={input.payout_option ?? ''}
+              >
+                <option value="">Select payout option</option>
+                <option value="pay_to_coop_saving">Pay to coop savings</option>
+                <option value="pay_to_bank_account">Pay to bank account</option>
+              </select>
+            </div>
+            {input.payout_option === 'pay_to_bank_account' && (
+              <div className="input-container">
+                <label htmlFor="payout_bank_id">
+                  Bank account<sup className="text-red-700">*</sup>
+                </label>
+                <select
+                  name="payout_bank_id"
+                  required
+                  onChange={handleChange}
+                  value={input.payout_bank_id ?? ''}
+                >
+                  <option value="">Select bank account</option>
+                  {bankAccounts.map((account) => (
+                    <option value={account.id} key={account.id}>
+                      {account.bank_name} - {account.acc_number}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className="input-container">
               <label htmlFor="latest_payslip">
                 Latest payslip (JPEG, PNG, or PDF)<sup className="text-red-700">*</sup>
               </label>
@@ -199,8 +286,17 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             </div>
         </div>
           <div className="flex justify-end gap-5 p-5 bg-[#1985B3] rounded-b-[18px]">
-          <button type="submit" className='apply-btn'>Apply</button>
-          <button type="button" onClick={() => navigate('/dashboard/loans')} className='discard-btn'>Discard</button>
+          <button type="submit" className='apply-btn' disabled={submitting}>
+            {submitting ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Submitting...
+              </span>
+            ) : (
+              'Apply'
+            )}
+          </button>
+          <button type="button" onClick={() => navigate('/dashboard/loans')} className='discard-btn' disabled={submitting}>Discard</button>
         </div>
       </div>
       </form>

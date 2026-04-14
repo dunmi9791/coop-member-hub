@@ -18,8 +18,6 @@ const Investments = () => {
          </Link>
          <Link to='investment-purchase' className={ pathname.includes('investments/investment-purchase') ?
             'active-selector bg-gradient-primary' : 'inactive'}>Investement purchase requests</Link>
-            <Link to='investment-withdrawal' className={ pathname.includes('investments/investment-withdrawal') ?
-            'active-selector bg-gradient-primary' : 'inactive'}>Investement withdrawal</Link>
             </div>
             </Scroller>
          <Outlet/>

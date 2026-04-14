@@ -21,14 +21,12 @@ import ActiveLoans from "./pages/LoanManagement/ActiveLoans";
 import LoanResult from "./pages/LoanManagement/LoanResult";
 
 import SharesPortfolio from "./pages/InvestmentManagement/SharesPortfolio";
-import SharesWithdrawalRequests from "./pages/InvestmentManagement/SharesWithdrawalRequests";
 import SharesPurchaseRequests from "./pages/InvestmentManagement/SharesPurchaseRequests";
 import ViewShare from "./pages/InvestmentManagement/ViewShare";
 import SharesPurchase from "./pages/InvestmentManagement/SharesPurchase";
 import BoughtShares from "./pages/InvestmentManagement/BoughtShares";
 import BuyShares from "./pages/InvestmentManagement/BuyShares";
-import InvestmentWithdrawals from "./pages/InvestmentManagement/InvestmentWithdrawals";
-import WithdrawInvestment from "./pages/InvestmentManagement/WithdrawInvestment";
+import InvestmentResult from "./pages/InvestmentManagement/InvestmentResult";
 import SavingStatement from "./pages/Statements/SavingStatement";
 import LoanStatement from "./pages/Statements/LoanStatement";
 import MemberProfile from "./pages/Profile";
@@ -47,6 +45,7 @@ import RealEstateInvestment from "./pages/RealEstateInvestment/RealEstateInvestm
 import AvailableInvestments from "./pages/RealEstateInvestment/AvailableInvestments";
 import MyInvestments from "./pages/RealEstateInvestment/MyInvestments";
 import InvestmentDetails from "./pages/RealEstateInvestment/InvestmentDetails";
+import SubscribeToProject from "./pages/RealEstateInvestment/SubscribeToProject";
 
 
 
@@ -140,10 +139,7 @@ const App = () => {
              <Route path="/dashboard/investments" element={<SharesPortfolio/>}>
              <Route index element={<BoughtShares/>}/>
              <Route path="invest" element={<BuyShares/>}/>
-             </Route>
-             <Route path="investment-withdrawal" element={<InvestmentWithdrawals/>}>
-             <Route index element={<SharesWithdrawalRequests/>}/>
-             <Route path="withdraw-investment" element={<WithdrawInvestment/>}/>
+             <Route path="result" element={<InvestmentResult/>}/>
              </Route>
              <Route path="investment-purchase" element={<SharesPurchase/>}>
              <Route index element={<SharesPurchaseRequests/>}/>
@@ -163,6 +159,7 @@ const App = () => {
                <Route index element={<AvailableInvestments />} />
                <Route path="my-investments" element={<MyInvestments />} />
                <Route path=":id" element={<InvestmentDetails />} />
+               <Route path="subscribe/:id" element={<SubscribeToProject />} />
              </Route>
              <Route path="/dashboard/profile" element={<MemberProfile/>}/>
              <Route path="/dashboard/settings" element={<Settings/>}/>

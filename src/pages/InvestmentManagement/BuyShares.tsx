@@ -106,25 +106,31 @@ const BuyShares = () => {
             const resp = await api.post("/api/portal/create_investment/", payload);
             const result = resp.data.result;
 
-            if (result?.status === "success" || !resp.data.error) {
-                toast({
-                    title: "Success",
-                    description: result?.message || "Investment created successfully",
+            if (result?.success || !resp.data.error) {
+                navigate("/dashboard/investments/result", { 
+                    state: { 
+                        success: true, 
+                        message: result?.message || "Investment created and confirmed successfully",
+                        data: result?.data 
+                    } 
                 });
-                navigate("/dashboard/investments");
             } else {
-                toast({
-                    title: "Error",
-                    description: result?.message || "Failed to create investment",
-                    variant: "destructive",
+                navigate("/dashboard/investments/result", { 
+                    state: { 
+                        success: false, 
+                        message: result?.message || "Failed to create investment",
+                        error: resp.data.error?.message || result?.message
+                    } 
                 });
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error creating investment:", error);
-            toast({
-                title: "Error",
-                description: "An unexpected error occurred",
-                variant: "destructive",
+            navigate("/dashboard/investments/result", { 
+                state: { 
+                    success: false, 
+                    message: "An unexpected error occurred",
+                    error: error.message
+                } 
             });
         } finally {
             setLoading(false);
