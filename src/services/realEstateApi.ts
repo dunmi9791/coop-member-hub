@@ -202,7 +202,8 @@ export const subscribeToUnit = async (
   memberId: string,
   projectId: number,
   unitId: number,
-  paymentSource: string
+  paymentSource: string,
+  paymentProof?: string
 ): Promise<{ result?: any; error?: any }> => {
   const requestBody = {
     jsonrpc: "2.0",
@@ -211,7 +212,8 @@ export const subscribeToUnit = async (
       member_id: memberId,
       project_id: projectId,
       unit_id: unitId,
-      payment_source: paymentSource
+      payment_source: paymentSource,
+      payment_proof: paymentProof
     },
     id: Math.floor(Math.random() * 1000)
   };

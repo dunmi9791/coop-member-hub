@@ -42,14 +42,35 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Odoo sometimes returns "Session Expired" as a 200 OK with an error object
+    if (response.data?.error?.data?.name === "odoo.http.SessionExpiredException" || 
+        response.data?.error?.message === "Odoo Session Expired") {
+      console.error("Odoo Session Expired, redirecting to login");
+      handleUnauthorized();
+    }
+    return response;
+  },
   (error) => {
     // Handle global errors like 401 unauthorized
     if (error.response?.status === 401) {
       console.error("Unauthorized, redirect to login");
+      handleUnauthorized();
     }
     return Promise.reject(error);
   }
 );
+
+function handleUnauthorized() {
+  // Clear all session data
+  sessionStorage.removeItem("user");
+  sessionStorage.removeItem("session_info");
+  
+  // Use window.location.href to force a full reload and redirect to login
+  // This ensures all application state is cleared
+  if (window.location.pathname !== "/") {
+    window.location.href = "/";
+  }
+}
 
 export default api;

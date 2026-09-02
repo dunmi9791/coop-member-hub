@@ -46,6 +46,8 @@ import AvailableInvestments from "./pages/RealEstateInvestment/AvailableInvestme
 import MyInvestments from "./pages/RealEstateInvestment/MyInvestments";
 import InvestmentDetails from "./pages/RealEstateInvestment/InvestmentDetails";
 import SubscribeToProject from "./pages/RealEstateInvestment/SubscribeToProject";
+import PurchaseRequest from "./pages/PurchaseRequest/PurchaseRequest";
+import PurchaseRequestResult from "./pages/PurchaseRequest/PurchaseRequestResult";
 
 
 
@@ -161,6 +163,8 @@ const App = () => {
                <Route path=":id" element={<InvestmentDetails />} />
                <Route path="subscribe/:id" element={<SubscribeToProject />} />
              </Route>
+             <Route path="/dashboard/purchase-request" element={<PurchaseRequest />} />
+             <Route path="/dashboard/purchase-request/result" element={<PurchaseRequestResult />} />
              <Route path="/dashboard/profile" element={<MemberProfile/>}/>
              <Route path="/dashboard/settings" element={<Settings/>}/>
              <Route path="/dashboard/help" element={<Help/>}>

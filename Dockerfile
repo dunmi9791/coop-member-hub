@@ -1,19 +1,23 @@
 # Build stage
 FROM node:20-alpine AS build
 
+# Set environment to development to ensure devDependencies are used for build
+ENV NODE_ENV=development
+
 WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Install dependencies (using npm ci for faster, more reliable builds)
-RUN npm ci
+# Install dependencies (including devDependencies for build)
+# Using --include=dev to ensure vite and other build tools are installed
+RUN npm install --include=dev
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN ./node_modules/.bin/vite build
 
 # Production stage
 FROM nginx:alpine

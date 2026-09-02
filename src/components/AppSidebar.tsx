@@ -33,6 +33,7 @@ const mainItems = [
   { title: "Savings", url: "/dashboard/savings", icon: Wallet },
   { title: "Loans", url: "/dashboard/loans", icon: CreditCard },
   { title: "Investments", url: "/dashboard/investments", icon: TrendingUp },
+  { title: "Purchase Request", url: "/dashboard/purchase-request", icon: CreditCard },
   { title: "Real Estate", url: "/dashboard/real-estate", icon: Building2 },
   { title: "Statements", url: "/dashboard/statements", icon: FileText },
   { title: "Withdrawal", url: "/dashboard/withdrawal", icon: Wallet },
@@ -57,6 +58,7 @@ export function AppSidebar() {
 
   const handleLogout = () => {
     sessionStorage.removeItem('user');
+    sessionStorage.removeItem('session_info');
     navigate('/');
   };
 
