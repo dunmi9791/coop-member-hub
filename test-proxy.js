@@ -11,7 +11,7 @@ async function testProxyConfiguration() {
       jsonrpc: "2.0",
       method: "call",
       params: {
-        db: "ngml_corp",
+        db: "nlng_coop",
         login: "test@example.com", 
         password: "testpassword",
         context: {}

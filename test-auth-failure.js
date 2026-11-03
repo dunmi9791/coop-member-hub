@@ -8,7 +8,7 @@ async function testAuthFailure() {
     jsonrpc: "2.0",
     method: "call",
     params: {
-      db: "ngml_corp",
+      db: "nlng_coop",
       login: "invalid@email.com", // Invalid credentials
       password: "wrongpassword",
       context: {}
@@ -16,7 +16,7 @@ async function testAuthFailure() {
   };
 
   try {
-    const response = await axios.post('http://41.78.157.36:8069/web/session/authenticate', payload, {
+    const response = await axios.post('https://nlngcoop.cooplatform.com.ng/web/session/authenticate', payload, {
       withCredentials: true,
       timeout: 10000,
       headers: {

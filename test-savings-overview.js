@@ -13,7 +13,7 @@ async function testSavingsOverview() {
 
   try {
     // Test directly against the Odoo backend
-    const response = await axios.post('http://41.78.157.36:8069/api/portal/savings_overview', requestData, {
+    const response = await axios.post('https://nlngcoop.cooplatform.com.ng/api/portal/savings_overview', requestData, {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'

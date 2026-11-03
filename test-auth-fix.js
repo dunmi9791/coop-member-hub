@@ -10,7 +10,7 @@ async function testAuthenticationFix() {
     jsonrpc: "2.0",
     method: "call",
     params: {
-      db: "ngml_corp",
+      db: "nlng_coop",
       login: "invalid@email.com",
       password: "wrongpassword",
       context: {}
@@ -18,7 +18,7 @@ async function testAuthenticationFix() {
   };
 
   try {
-    const response = await axios.post('http://41.78.157.36:8069/web/session/authenticate', failPayload, {
+    const response = await axios.post('https://nlngcoop.cooplatform.com.ng/web/session/authenticate', failPayload, {
       withCredentials: true,
       timeout: 10000,
       headers: {
@@ -50,7 +50,7 @@ async function testAuthenticationFix() {
       result: {
         uid: 123,
         session_id: 'test_session',
-        db: 'ngml_corp',
+        db: 'nlng_coop',
         name: 'Test User',
         username: 'testuser'
       }

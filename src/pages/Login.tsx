@@ -28,7 +28,7 @@ const Login = () => {
       jsonrpc: "2.0",
       method: "call",
       params: {
-        db: "ngml_corp",
+        db: "nlng_coop",
         login: email,
         password: password,
         context: {},

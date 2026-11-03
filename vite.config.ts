@@ -10,19 +10,22 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
      proxy: {
       '/web': {
-        target: 'http://41.78.157.36:8069', 
+        target: 'https://nlngcoop.cooplatform.com.ng',
         changeOrigin: true,
-        secure: false,
+        secure: true,
+        cookieDomainRewrite: '',
       },
       '/api/portal': {
-        target: 'http://41.78.157.36:8069', 
+        target: 'https://nlngcoop.cooplatform.com.ng',
         changeOrigin: true,
-        secure: false,
+        secure: true,
+        cookieDomainRewrite: '',
       },
       '/odoo/api': {
-        target: 'http://41.78.157.36:8069', 
+        target: 'https://nlngcoop.cooplatform.com.ng',
         changeOrigin: true,
-        secure: false,
+        secure: true,
+        cookieDomainRewrite: '',
         rewrite: (path) => path.replace(/^\/odoo/, ''),
       },
     },

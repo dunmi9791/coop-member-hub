@@ -8,7 +8,7 @@ async function testOdooSessionStructure() {
     "jsonrpc": "2.0",
     "method": "call",
     "params": {
-      "db": "ngml_corp",
+      "db": "nlng_coop",
       "login": "test@example.com", // placeholder - would use real credentials
       "password": "testpassword",
       "context": {}

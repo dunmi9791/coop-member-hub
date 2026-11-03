@@ -15,7 +15,7 @@ async function testAuthenticationFailure() {
                 jsonrpc: "2.0",
                 method: "call",
                 params: {
-                    db: "ngml_corp",
+                    db: "nlng_coop",
                     login: "invalid@email.com",
                     password: "wrongpassword",
                     context: {}
@@ -28,7 +28,7 @@ async function testAuthenticationFailure() {
                 jsonrpc: "2.0",
                 method: "call",
                 params: {
-                    db: "ngml_corp",
+                    db: "nlng_coop",
                     login: "",
                     password: "",
                     context: {}
