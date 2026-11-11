@@ -1,8 +1,7 @@
-"use client"
-
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import jsPDF from "jspdf"
-import autoTable from  "jspdf-autotable"
+import autoTable from "jspdf-autotable"
+import { Loader2 } from "lucide-react"
 
 import {
   Table,
@@ -14,13 +13,6 @@ import {
 } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   Pagination,
   PaginationContent,
   PaginationItem,
@@ -28,18 +20,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
-
-const SavingStatement = () => {
-
-
-//  Sample savings transactions
-const savingsData = [
-  { id: 1, date: "2025-01-05", description: "Monthly Savings", amount: 5000, balance: 5000, status: "Credit" },
-  { id: 2, date: "2025-02-05", description: "Monthly Savings", amount: 5000, balance: 10000, status: "Credit" },
-  { id: 3, date: "2025-03-10", description: "Withdrawal", amount: -2000, balance: 8000, status: "Debit" },
-  { id: 4, date: "2025-04-05", description: "Monthly Savings", amount: 5000, balance: 13000, status: "Credit" },
-  { id: 5, date: "2025-05-15", description: "Withdrawal", amount: -3000, balance: 10000, status: "Debit" },
-]
+import { fetchSavingsStatement, formatMoney, SavingsStatement } from "@/services/statementApi"
 
 // Styled status badge
 function StatusBadge({ status }: { status: string }) {
@@ -58,145 +39,226 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-  const [search, setSearch] = useState("")
-  const [status, setStatus] = useState("")
-  const [date, setDate] = useState("")
-  const [page, setPage] = useState(1)
-  const rowsPerPage = 5
+const selectClass =
+  "h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 
-  // Filtering logic
-  const filteredData = savingsData.filter((item) => {
-    const matchesSearch =
+const SavingStatement = () => {
+  const [statement, setStatement] = useState<SavingsStatement | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const [accountId, setAccountId] = useState<string>("")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
+  const [search, setSearch] = useState("")
+  const [page, setPage] = useState(1)
+  const rowsPerPage = 10
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await fetchSavingsStatement(accountId ? Number(accountId) : undefined, {
+        date_from: dateFrom,
+        date_to: dateTo,
+      })
+      setStatement(data)
+    } catch (err) {
+      setStatement(null)
+      setError(err instanceof Error ? err.message : "Failed to load savings statement.")
+    } finally {
+      setLoading(false)
+    }
+  }, [accountId, dateFrom, dateTo])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  useEffect(() => {
+    setPage(1)
+  }, [search, accountId, dateFrom, dateTo])
+
+  const symbol = statement?.currency?.symbol || "₦"
+  const transactions = statement?.transactions || []
+
+  // Newest first on screen; the running balance is computed oldest-first by the backend
+  const filteredData = transactions
+    .filter((item) =>
       search === "" ||
-      Object.values(item).some((val) =>
-        String(val).toLowerCase().includes(search.toLowerCase())
-      )
-    const matchesStatus = status === "" || item.status === status
-    const matchesDate = date === "" || item.date === date
-    return matchesSearch && matchesStatus && matchesDate
-  })
+      [item.date, item.reference, item.description, item.account_number, item.amount, item.balance]
+        .some((val) => String(val ?? "").toLowerCase().includes(search.toLowerCase()))
+    )
+    .slice()
+    .reverse()
 
   const pageCount = Math.ceil(filteredData.length / rowsPerPage) || 1
   const paginatedData = filteredData.slice((page - 1) * rowsPerPage, page * rowsPerPage)
 
-  useEffect(() => {
-    setPage(1)
-  }, [search, status, date])
+  const selectedAccount = statement?.accounts.find((a) => String(a.id) === accountId)
 
-const generatePDF = () => {
-  const doc:any = new jsPDF();
+  const generatePDF = () => {
+    if (!statement) return
+    // jsPDF's built-in fonts have no ₦ glyph, so the PDF uses the currency code
+    const money = (v: number) => formatMoney(v, `${statement.currency.name} `)
+    const doc: any = new jsPDF()
 
-  // --- Header ---
-  doc.setFontSize(18);
-  doc.text("Savings Statement", 14, 20);
+    doc.setFontSize(18)
+    doc.text("Savings Statement", 14, 20)
 
-  doc.setFontSize(12);
-  doc.text("Name: John Doe", 14, 30);
-  doc.text("Account No: 1234567890", 14, 37);
-  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 44);
+    doc.setFontSize(11)
+    doc.text(`Name: ${statement.member.name}`, 14, 30)
+    doc.text(`Member ID: ${statement.member.member_id || "-"}`, 14, 36)
+    doc.text(
+      `Account: ${selectedAccount ? `${selectedAccount.account_number} (${selectedAccount.product_name})` : "All accounts"}`,
+      14,
+      42
+    )
+    doc.text(
+      `Period: ${statement.date_from || "Start"} to ${statement.date_to || new Date().toISOString().slice(0, 10)}`,
+      14,
+      48
+    )
+    doc.text(
+      `Opening: ${money(statement.opening_balance)}   Credits: ${money(statement.total_credits)}   ` +
+        `Debits: ${money(statement.total_debits)}   Closing: ${money(statement.closing_balance)}`,
+      14,
+      54
+    )
 
-  // --- Table setup ---
-  const tableColumn = ["Date", "Description", "Amount (₦)", "Balance (₦)", "Status"];
+    autoTable(doc, {
+      head: [["Date", "Reference", "Description", "Account", "Credit", "Debit", "Balance"]],
+      body: transactions.map((txn) => [
+        txn.date,
+        txn.reference,
+        txn.description,
+        txn.account_number,
+        txn.credit ? money(txn.credit) : "-",
+        txn.debit ? money(txn.debit) : "-",
+        money(txn.balance),
+      ]),
+      startY: 60,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [4, 61, 115] },
+      alternateRowStyles: { fillColor: [240, 240, 240] },
+      didDrawPage: (data) => {
+        const pageCount = doc.internal.getNumberOfPages()
+        doc.setFontSize(9)
+        doc.text(
+          `Generated on ${new Date().toLocaleDateString()} - Page ${data.pageNumber} of ${pageCount}`,
+          14,
+          doc.internal.pageSize.height - 10
+        )
+      },
+    })
 
-  // ✅ Use the full dataset (not just paginated rows)
-  const tableRows = savingsData.map((txn) => [
-    txn.date,
-    txn.description,
-    `₦${txn.amount.toLocaleString()}`,
-    `₦${txn.balance.toLocaleString()}`,
-    txn.status,
-  ]);
-
-  autoTable(doc, {
-    head: [tableColumn],
-    body: tableRows,
-    startY: 50,
-    styles: { fontSize: 10 },
-    headStyles: { fillColor: [41, 128, 185] }, // blue header
-    alternateRowStyles: { fillColor: [240, 240, 240] }, // striped
-    margin: { top: 50 },
-    didDrawPage: (data) => {
-      // --- Footer with page number ---
-      const pageCount = doc.internal.getNumberOfPages();
-      doc.setFontSize(10);
-      doc.text(
-        `Page ${data.pageNumber} of ${pageCount}`,
-        doc.internal.pageSize.width - 40,
-        doc.internal.pageSize.height - 10
-      );
-    },
-  });
-
-  // --- Save file ---
-  doc.save("savings-statement.pdf");
-};
+    doc.save("savings-statement.pdf")
+  }
 
   return (
     <div className="mt-5 bg-gray-50 min-h-screen">
       <div className="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow-md space-y-4">
         <div className="flex justify-between align-items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Savings statement</h1>
-          {/*  Download Button */}
-        <button
-          onClick={generatePDF}
-          className="bg-[#043d73] text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          Download as PDF
-        </button>
+          <h1 className="text-2xl font-bold text-gray-800">Savings statement</h1>
+          <button
+            onClick={generatePDF}
+            disabled={!statement || transactions.length === 0}
+            className="bg-[#043d73] text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Download as PDF
+          </button>
         </div>
-        {/* 🔎 Search + Filters */}
-        <div className="flex flex-wrap gap-2">
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2 items-end">
+          <label className="flex flex-col text-sm text-gray-600">
+            Account
+            <select className={selectClass} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+              <option value="">All accounts</option>
+              {(statement?.accounts || []).map((acc) => (
+                <option key={acc.id} value={acc.id}>
+                  {acc.account_number}{acc.product_name ? ` (${acc.product_name})` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col text-sm text-gray-600">
+            From
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          </label>
+          <label className="flex flex-col text-sm text-gray-600">
+            To
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </label>
           <Input
-            placeholder="Search (description, amount, date)…"
+            placeholder="Search (reference, description, amount, date)…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full"
+            className="flex-1 min-w-[200px]"
           />
-
         </div>
 
-        {/* Savings Table */}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>S/N</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Balance</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedData.length > 0 ? (
-              paginatedData.map((item, index) => (
-                <TableRow key={item.id}>
-                  <TableCell>{(page - 1) * rowsPerPage + index + 1}</TableCell>
-                  <TableCell>{item.date}</TableCell>
-                  <TableCell>{item.description}</TableCell>
-                  <TableCell className={item.amount < 0 ? "text-red-500" : "text-green-600"}>
-                    ₦{item.amount.toLocaleString()}
-                  </TableCell>
-                  <TableCell>₦{item.balance.toLocaleString()}</TableCell>
-                  <TableCell><StatusBadge status={item.status} /></TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center">No transactions found</TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+        {/* Summary */}
+        {statement && !loading && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            <div className="rounded-lg border p-3"><div className="text-gray-500">Opening balance</div><div className="font-semibold">{formatMoney(statement.opening_balance, symbol)}</div></div>
+            <div className="rounded-lg border p-3"><div className="text-gray-500">Total credits</div><div className="font-semibold text-green-600">{formatMoney(statement.total_credits, symbol)}</div></div>
+            <div className="rounded-lg border p-3"><div className="text-gray-500">Total debits</div><div className="font-semibold text-red-500">{formatMoney(statement.total_debits, symbol)}</div></div>
+            <div className="rounded-lg border p-3"><div className="text-gray-500">Closing balance</div><div className="font-semibold">{formatMoney(statement.closing_balance, symbol)}</div></div>
+          </div>
+        )}
 
-        {/* 📄 Pagination */}
-        {pageCount > 1 && (
+        {loading ? (
+          <div className="flex justify-center p-10">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : error ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 text-sm">{error}</div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>S/N</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Reference</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Balance</TableHead>
+                <TableHead>Type</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedData.length > 0 ? (
+                paginatedData.map((item, index) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{(page - 1) * rowsPerPage + index + 1}</TableCell>
+                    <TableCell>{item.date}</TableCell>
+                    <TableCell>{item.reference}</TableCell>
+                    <TableCell>{item.description}</TableCell>
+                    <TableCell className={item.amount < 0 ? "text-red-500" : "text-green-600"}>
+                      {formatMoney(item.amount, symbol)}
+                    </TableCell>
+                    <TableCell>{formatMoney(item.balance, symbol)}</TableCell>
+                    <TableCell><StatusBadge status={item.type === "credit" ? "Credit" : "Debit"} /></TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center">No transactions found</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+
+        {/* Pagination */}
+        {!loading && !error && pageCount > 1 && (
           <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
                   href="#"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={(e) => { e.preventDefault(); setPage((p) => Math.max(1, p - 1)) }}
                   className={page === 1 ? "pointer-events-none opacity-50" : ""}
                 />
               </PaginationItem>
@@ -206,7 +268,7 @@ const generatePDF = () => {
                   <PaginationLink
                     href="#"
                     isActive={page === i + 1}
-                    onClick={() => setPage(i + 1)}
+                    onClick={(e) => { e.preventDefault(); setPage(i + 1) }}
                   >
                     {i + 1}
                   </PaginationLink>
@@ -216,7 +278,7 @@ const generatePDF = () => {
               <PaginationItem>
                 <PaginationNext
                   href="#"
-                  onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                  onClick={(e) => { e.preventDefault(); setPage((p) => Math.min(pageCount, p + 1)) }}
                   className={page === pageCount ? "pointer-events-none opacity-50" : ""}
                 />
               </PaginationItem>

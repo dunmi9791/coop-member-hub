@@ -5,8 +5,8 @@ This document describes the Odoo backend integration implemented for the Coopera
 ## Configuration
 
 ### Backend URL
-- **Odoo Server**: https://nlngcoop.cooplatform.com.ng/
-- **Database**: nlng_coop
+- **Odoo Server**: http://41.78.157.36:8069/
+- **Database**: ngml_corp
 
 ### Environment Configuration
 The Odoo backend URL is configured in the `.env` file:
@@ -20,7 +20,7 @@ To resolve CORS (Cross-Origin Resource Sharing) issues when connecting to the Od
 ```
 proxy: {
   '/web': {
-    target: 'https://nlngcoop.cooplatform.com.ng', 
+    target: 'http://41.78.157.36:8069', 
     changeOrigin: true,
     secure: false,
   },
@@ -29,7 +29,7 @@ proxy: {
 
 This configuration:
 - Routes all requests starting with `/web` through the Vite development server
-- Proxies them to the Odoo backend at `https://nlngcoop.cooplatform.com.ng`
+- Proxies them to the Odoo backend at `http://41.78.157.36:8069`
 - Eliminates CORS issues by making requests appear to come from the same origin
 - Uses `changeOrigin: true` to modify the host header for proper routing
 
@@ -45,7 +45,7 @@ The login functionality is implemented in `src/pages/Login.tsx` with the followi
      "jsonrpc": "2.0",
      "method": "call",
      "params": {
-       "db": "nlng_coop",
+       "db": "ngml_corp",
        "login": "user_email",
        "password": "user_password",
        "context": {}
@@ -85,7 +85,7 @@ The project already had the following authentication infrastructure:
 
 2. **Access the login page**: The application will show the login form
 
-3. **Login with Odoo credentials**: Enter valid Odoo user credentials for the `nlng_coop` database
+3. **Login with Odoo credentials**: Enter valid Odoo user credentials for the `ngml_corp` database
 
 4. **Authentication Flow**:
    - Form submission sends JSON-RPC request to Odoo

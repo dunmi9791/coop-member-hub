@@ -2,11 +2,11 @@ const axios = require('axios');
 
 // Test Odoo connection and authentication endpoint
 async function testOdooConnection() {
-  const baseURL = 'https://nlngcoop.cooplatform.com.ng';
+  const baseURL = 'http://41.78.157.36:8069';
   
   console.log('Testing Odoo backend connection...');
   console.log('Base URL:', baseURL);
-  console.log('Database:', 'nlng_coop');
+  console.log('Database:', 'ngml_corp');
   
   try {
     // Test basic connectivity
@@ -20,7 +20,7 @@ async function testOdooConnection() {
       jsonrpc: "2.0",
       method: "call",
       params: {
-        db: "nlng_coop",
+        db: "ngml_corp",
         login: "test@example.com", 
         password: "testpassword",
         context: {}

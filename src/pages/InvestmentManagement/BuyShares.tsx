@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import api from "@/hooks/api";
 import { UserContext } from "@/hooks/AuthContext";
 import { toast } from "@/components/ui/use-toast";
+import FundingFields, { useFunding } from "@/components/investment/FundingFields";
 
 interface Input {
     investment_type_id: string;
@@ -16,6 +17,7 @@ interface Input {
 interface InvestmentType {
     id: number;
     name: string;
+    payout_rules?: string;
 }
 
 interface Tenor {
@@ -37,6 +39,9 @@ const BuyShares = () => {
     const [tenors, setTenors] = useState<Tenor[]>([]);
     const [loading, setLoading] = useState(false);
     const [fetchingData, setFetchingData] = useState(true);
+
+    // Funding: how the member is paying for this investment
+    const funding = useFunding();
 
     useEffect(() => {
         const fetchFormData = async () => {
@@ -77,6 +82,12 @@ const BuyShares = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const fundingError = funding.validate(Number(input.amount));
+        if (fundingError) {
+            toast({ title: "Funding details needed", description: fundingError, variant: "destructive" });
+            return;
+        }
         
         if (!credentials?.partner_id) {
             toast({
@@ -88,6 +99,14 @@ const BuyShares = () => {
         }
 
         setLoading(true);
+        let fundingParams = {};
+        try {
+            fundingParams = await funding.toPayload();
+        } catch (err) {
+            setLoading(false);
+            toast({ title: "Could not read a file", description: "Please attach it again.", variant: "destructive" });
+            return;
+        }
         const payload = {
             jsonrpc: "2.0",
             method: "call",
@@ -98,6 +117,7 @@ const BuyShares = () => {
                 tenor_id: Number(input.tenor_id),
                 start_date: input.start_date,
                 interest_option: input.interest_option,
+                ...fundingParams,
             },
             id: 1,
         };
@@ -106,7 +126,7 @@ const BuyShares = () => {
             const resp = await api.post("/api/portal/create_investment/", payload);
             const result = resp.data.result;
 
-            if (result?.success || !resp.data.error) {
+            if (result?.success && !resp.data.error) {
                 navigate("/dashboard/investments/result", { 
                     state: { 
                         success: true, 
@@ -118,8 +138,8 @@ const BuyShares = () => {
                 navigate("/dashboard/investments/result", { 
                     state: { 
                         success: false, 
-                        message: result?.message || "Failed to create investment",
-                        error: resp.data.error?.message || result?.message
+                        message: result?.error || result?.message || "Failed to create investment",
+                        error: resp.data.error?.data?.message || resp.data.error?.message || result?.error
                     } 
                 });
             }
@@ -176,6 +196,14 @@ const BuyShares = () => {
                                     </>
                                 )}
                             </select>
+                            {(() => {
+                                const rules = investmentTypes.find(
+                                    (t) => String(t.id) === input.investment_type_id
+                                )?.payout_rules;
+                                return rules ? (
+                                    <p className="text-xs text-muted-foreground mt-1">Payouts: {rules}</p>
+                                ) : null;
+                            })()}
                         </div>
 
                         <div className="input-container">
@@ -248,6 +276,10 @@ const BuyShares = () => {
                                 <option value="compounding">Compounding</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div className="mt-6 border-t pt-5">
+                        <FundingFields funding={funding} amount={Number(input.amount)} />
                     </div>
                 </div>
 

@@ -39,8 +39,8 @@ const InitiateWithdrawal = () => {
           params: {},
         };
         const response = await api.post("/api/portal/savings_overview", payload);
-        if (response.data?.result?.accounts) {
-          const accounts = response.data.result.accounts;
+        const accounts = response.data?.result?.accounts;
+        if (Array.isArray(accounts)) {
           setSavingsAccounts(accounts);
           if (accounts.length > 0) {
             setInput(prev => ({ ...prev, savings_account_id: accounts[0].id.toString() }));
@@ -69,9 +69,9 @@ const InitiateWithdrawal = () => {
           }
         }
         const resp = await api.post('/api/portal/bank_accounts', payload);
-        if (resp?.data?.result) {
-          setBankAccounts(resp.data.result);
-        }
+        const result = resp?.data?.result;
+        const list = Array.isArray(result) ? result : result?.data;
+        setBankAccounts(Array.isArray(list) ? list : []);
       } catch (error) {
         console.error("Error fetching bank accounts:", error);
       } finally {
@@ -91,16 +91,32 @@ const InitiateWithdrawal = () => {
   const onSubmit = async (e) => {
     e.preventDefault()
     const payload = {
-      savings_account_id: input.savings_account_id,
-      amount: input.amount,
-      reason: input.reason,
-      bank_account_id: input.bank_account_id
+      jsonrpc: "2.0",
+      method: "call",
+      params: {
+        savings_account_id: Number(input.savings_account_id),
+        amount: Number(input.amount),
+        reason: input.reason,
+        bank_account_id: input.bank_account_id ? Number(input.bank_account_id) : undefined,
+      },
     }
     try {
-      const resp = await api.post('/api/portal/withdrawal', payload)
+      const resp = await api.post('/api/portal/withdrawal_request', payload)
+      const result = resp?.data?.result
+      const rpcError = resp?.data?.error
+      if (rpcError || !result?.ok) {
+        toast({
+          title: "Error",
+          description: result?.error || rpcError?.data?.message || rpcError?.message || 'Withdrawal application failed',
+          variant: "destructive"
+        })
+        return
+      }
       toast({
         title: "Success!",
-        description: 'Withdrawal application was successful',
+        description: result.withdrawal_request?.name
+          ? `Withdrawal request ${result.withdrawal_request.name} submitted`
+          : 'Withdrawal application was successful',
         variant: "default"
       })
       setInput({
@@ -120,7 +136,7 @@ const InitiateWithdrawal = () => {
     }
   };
 
-  const selectedSavingsAccount = savingsAccounts.find(acc => acc.id.toString() === input.savings_account_id);
+  const selectedSavingsAccount = savingsAccounts.find(acc => String(acc.id) === input.savings_account_id);
 
   return (
     <>
@@ -154,7 +170,7 @@ const InitiateWithdrawal = () => {
                 ) : (
                   savingsAccounts.map((acc) => (
                     <option key={acc.id} value={acc.id}>
-                      {acc.account_number} ({acc.product.name})
+                      {acc.account_number}{acc.product?.name ? ` (${acc.product.name})` : ""}
                     </option>
                   ))
                 )}
@@ -175,7 +191,7 @@ const InitiateWithdrawal = () => {
                 <option value="">Select bank account</option>
                 {bankAccounts.map((bank) => (
                   <option key={bank.id} value={bank.id}>
-                    {bank.bank_name} - {bank.account_number}
+                    {bank.bank_name} - {bank.acc_number ?? bank.account_number}
                   </option>
                 ))}
               </select>

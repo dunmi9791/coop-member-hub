@@ -67,29 +67,12 @@ export interface ProjectDetailsResponse {
 }
 
 export const fetchProjectUnits = async (projectId: number): Promise<{ result: { units: RealEstateUnit[] }, error?: any }> => {
-  const requestBody = {
-    jsonrpc: "2.0",
-    method: "call",
-    params: { project_id: projectId },
-    id: Math.floor(Math.random() * 1000)
-  };
-
-  try {
-    const response = await api.post('/api/portal/real_estate/project_units', requestBody);
-    return response.data;
-  } catch (error) {
-    // Return mock data for now if API fails
-    return {
-      result: {
-        units: [
-          { id: 1, name: 'Unit A1', number: 'A1', house_type: false, state: 'available', unit_price: 25000000, currency: { id: 120, name: 'NGN', symbol: '₦' } },
-          { id: 2, name: 'Unit A2', number: 'A2', house_type: false, state: 'available', unit_price: 27500000, currency: { id: 120, name: 'NGN', symbol: '₦' } },
-          { id: 3, name: 'Unit B1', number: 'B1', house_type: false, state: 'sold', unit_price: 30000000, currency: { id: 120, name: 'NGN', symbol: '₦' } },
-          { id: 4, name: 'Unit B2', number: 'B2', house_type: false, state: 'available', unit_price: 32000000, currency: { id: 120, name: 'NGN', symbol: '₦' } },
-        ]
-      }
-    };
+  // There is no dedicated units route; project_details returns the units.
+  const details = await fetchProjectDetails(projectId);
+  if (details.error) {
+    return { result: { units: [] }, error: details.error };
   }
+  return { result: { units: details.result?.units || [] } };
 };
 
 export interface RealEstateResponse {
@@ -114,76 +97,37 @@ export const fetchProjectDetails = async (projectId: number): Promise<ProjectDet
     id: Math.floor(Math.random() * 1000)
   };
 
-  try {
-    const response = await api.post('/api/portal/real_estate/project_details', requestBody);
-    
-    // Normalize the response if it matches the structure where data is nested
-    if (response.data?.result?.project) {
-      return response.data;
-    }
+  // Errors propagate to the caller so the page shows an error state;
+  // never substitute placeholder projects or units.
+  const response = await api.post('/api/portal/real_estate/project_details', requestBody);
+  const data = response.data;
 
-    if (response.data?.result?.data) {
-      return {
-        jsonrpc: response.data.jsonrpc,
-        id: response.data.id,
-        result: {
-          project: response.data.result.data,
-          units: response.data.result.units || [],
-          unit_count: response.data.result.unit_count || (response.data.result.units ? response.data.result.units.length : 0)
-        }
-      };
-    }
-    
-    return response.data;
-  } catch (error) {
-    // Return mock data for now if API fails
+  if (data?.error) {
+    return { ...data, error: { code: data.error.code, message: data.error.data?.message || data.error.message, data: data.error.data } };
+  }
+  // The controller reports business errors as { result: { error: "..." } }
+  if (typeof data?.result?.error === 'string') {
+    return { jsonrpc: data.jsonrpc, id: data.id, result: undefined as any, error: { code: 404, message: data.result.error } };
+  }
+
+  // Normalize the response if it matches the structure where data is nested
+  if (data?.result?.project) {
+    return data;
+  }
+
+  if (data?.result?.data) {
     return {
-      jsonrpc: "2.0",
-      id: 1,
+      jsonrpc: data.jsonrpc,
+      id: data.id,
       result: {
-        project: {
-          id: projectId,
-          name: 'Premium Waterfront Estate',
-          type: 'Residential',
-          location: 'Lekki Phase 1, Lagos',
-          picture_url: null,
-          gallery_urls: [
-            'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-            'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-            'https://images.unsplash.com/photo-1560448204-61dc36dc98c8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
-          ],
-          map_location_url: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3964.728551469375!2d3.4354228!3d6.4353051!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103bf5306d15e297%3A0xc3f83f2a832669e4!2sLekki%20Phase%201%2C%20Lagos!5e0!3m2!1sen!2sng!4v1711612345678!5m2!1sen!2sng',
-          description: 'Experience luxury living at its finest in the Premium Waterfront Estate. Located in the heart of Lekki Phase 1, this project offers breathtaking waterfront views, state-of-the-art amenities, and unparalleled architectural design. Perfect for both investment and a dream home, this estate is where modern elegance meets serene coastal charm.',
-          milestone_template: [
-            { id: 1, name: "Foundations", sequence: 1, percentage: 20, description: "Laying the groundwork" },
-            { id: 2, name: "Structural", sequence: 2, percentage: 30, description: "Building the frame" },
-            { id: 3, name: "Finishing", sequence: 3, percentage: 50, description: "Final touches" }
-          ]
-        },
-        units: [
-          { 
-            id: 1, 
-            name: 'Unit A1', 
-            number: 'A1',
-            house_type: false,
-            state: 'available', 
-            unit_price: 25000000,
-            currency: { id: 120, name: 'NGN', symbol: '₦' }
-          },
-          { 
-            id: 2, 
-            name: 'Unit A2', 
-            number: 'A2',
-            house_type: false,
-            state: 'available', 
-            unit_price: 27500000,
-            currency: { id: 120, name: 'NGN', symbol: '₦' }
-          }
-        ],
-        unit_count: 2
+        project: data.result.data,
+        units: data.result.units || [],
+        unit_count: data.result.unit_count || (data.result.units ? data.result.units.length : 0)
       }
     };
   }
+
+  return data;
 };
 
 export const fetchActiveProjects = async (): Promise<RealEstateResponse> => {
@@ -220,7 +164,15 @@ export const subscribeToUnit = async (
 
   try {
     const response = await api.post('/api/portal/real_estate/subscribe', requestBody);
-    return response.data;
+    const data = response.data;
+    if (data?.error) {
+      return { error: { message: data.error.data?.message || data.error.message } };
+    }
+    // Business errors (unit taken, bad proof, ...) come back as { result: { error: "..." } }
+    if (typeof data?.result?.error === 'string') {
+      return { error: { message: data.result.error } };
+    }
+    return data;
   } catch (error) {
     console.error('Subscription error:', error);
     return {

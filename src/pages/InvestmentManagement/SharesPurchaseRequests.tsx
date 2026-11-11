@@ -77,6 +77,32 @@ const SharesPurchaseRequests = () => {
       accessor: "start_date",
     },
     {
+      Header: "Funding",
+      accessor: "funding_source",
+      Cell: ({ value, item }: any) => {
+        if (!value) return <span className="text-amber-700 text-sm">Not provided</span>;
+        const source = value === "savings" ? "From savings" : value === "rollover" ? "Rollover" : "Bank payment";
+        const statusText: Record<string, string> = {
+          awaiting: "Awaiting details",
+          declared: "Awaiting verification",
+          verified: "Verified",
+          funded: "Funded",
+          rejected: "Withdrawal rejected",
+        };
+        const proofs = item?.funding_proofs?.length || 0;
+        return (
+          <div className="text-sm">
+            <div>{source}</div>
+            <div className="text-xs text-muted-foreground">
+              {statusText[item?.funding_status] || item?.funding_status}
+              {item?.funding_reference ? ` · Ref ${item.funding_reference}` : ""}
+              {proofs ? ` · ${proofs} file${proofs > 1 ? "s" : ""}` : ""}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
       Header: "Status",
       accessor: "status",
       Cell: ({ value }: any) => <StatusBadge status={value} />,

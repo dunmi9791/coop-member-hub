@@ -46,9 +46,11 @@ const SubscribeToProject = () => {
         setLoading(true)
         // Fetch project details which now includes units
         const projectResponse = await fetchProjectDetails(parseInt(id))
-        if (projectResponse.result) {
+        if (projectResponse.error) {
+          setError(projectResponse.error.message || 'Failed to load project units.')
+        } else if (projectResponse.result) {
           setProject(projectResponse.result.project)
-          
+
           if (projectResponse.result.units) {
             setUnits(projectResponse.result.units)
           } else {

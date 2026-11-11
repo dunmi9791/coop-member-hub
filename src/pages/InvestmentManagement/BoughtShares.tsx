@@ -91,6 +91,41 @@ const BoughtShares = () => {
       accessor: "maturity_date",
     },
     {
+      Header: "Next Payment",
+      accessor: "next_payment",
+      Cell: ({ value, item }: any) => {
+        const naira = (n: number) =>
+          new Intl.NumberFormat("en-NG", {
+            style: "currency",
+            currency: item?.currency || "NGN",
+            minimumFractionDigits: 0,
+          }).format(n || 0);
+        const to = (dest: string) => (dest === "savings" ? "to savings" : "to bank");
+        if (!value) {
+          return item?.payout_rules ? (
+            <span className="text-xs text-muted-foreground">{item.payout_rules}</span>
+          ) : (
+            <span className="text-muted-foreground">-</span>
+          );
+        }
+        return (
+          <div className="text-sm" title={item?.payout_rules || ""}>
+            <div className="font-medium">{naira(value.total)}</div>
+            <div className="text-xs text-muted-foreground">
+              {value.date}
+              {value.interest ? ` · interest ${naira(value.interest)} ${to(value.interest_to)}` : ""}
+              {value.principal ? ` · principal ${naira(value.principal)} ${to(value.principal_to)}` : ""}
+            </div>
+            {item?.principal_outstanding !== undefined && item.principal_outstanding !== item.amount && (
+              <div className="text-xs text-muted-foreground">
+                Principal outstanding {naira(item.principal_outstanding)}
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
       Header: "Status",
       accessor: "status",
       Cell: ({ value }: any) => <StatusBadge status={value} />,

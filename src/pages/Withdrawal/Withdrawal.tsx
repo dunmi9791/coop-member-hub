@@ -6,26 +6,36 @@ import { UserContext } from '@/hooks/AuthContext';
 import api from '@/hooks/api';
 import { Loader2 } from 'lucide-react';
 
+const STATE_LABELS: Record<string, string> = {
+  draft: 'Draft',
+  submitted: 'Pending',
+  approved: 'Approved',
+  disbursed: 'Disbursed',
+  rejected: 'Rejected',
+  cancelled: 'Cancelled',
+};
+
 const Withdrawal = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const { credentials } = useContext(UserContext);
 
   const fetchWithdrawalHistory = async () => {
-    if (!credentials?.partner_id) return;
+    if (!credentials) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
+      // The backend scopes the list to the logged-in member's session
       const payload = {
         jsonrpc: '2.0',
         method: 'call',
-        params: {
-          partner_id: credentials.partner_id
-        }
+        params: {}
       }
-      const resp = await api.post('/api/portal/withdrawal_history', payload);
-      if (resp?.data?.result) {
-        setData(resp.data.result);
-      }
+      const resp = await api.post('/api/portal/withdrawal_requests', payload);
+      const list = resp?.data?.result?.withdrawal_requests;
+      setData(Array.isArray(list) ? list : []);
     } catch (error) {
       console.error("Error fetching withdrawal history:", error);
     } finally {
@@ -42,28 +52,23 @@ const Withdrawal = () => {
     { Header: "S/N", accessor: "", Cell:(({cell, state})=>{
       return <span>{cell.row.index+1 + state.pageIndex * state.pageSize}</span>
     }) },
-    { Header: "Date", accessor: "date", Cell:(({value})=>{
-      return <span>{new Date(value).toLocaleDateString()} {new Date(value).toLocaleTimeString()}</span>
+    { Header: "Reference", accessor: "name" },
+    { Header: "Date", accessor: "request_date", Cell:(({value})=>{
+      if (!value) return <span>-</span>;
+      // Odoo sends "YYYY-MM-DD HH:MM:SS" (UTC); make it ISO so every browser parses it
+      const d = new Date(String(value).replace(' ', 'T') + 'Z');
+      return <span>{d.toLocaleDateString()} {d.toLocaleTimeString()}</span>
     }) },
-    { Header: "Account name", accessor: "accountName" },
-    { Header: "Amount", accessor: "accountBalance", Cell:(({value})=>{
-      return <span>NGN {new Intl.NumberFormat('en-US', {minimumFractionDigits:2}).format(value)}</span>
+    { Header: "Account", accessor: "savings_account_name" },
+    { Header: "Amount", accessor: "amount", Cell:(({value})=>{
+      return <span>NGN {new Intl.NumberFormat('en-US', {minimumFractionDigits:2}).format(value || 0)}</span>
     }) },
-    { Header: "Payment mode", accessor: "paymentMode", Cell:(({value})=>{
-      return <div className="d-flex justify-content-center">
-       <div className={value ==='Cash' ? 'cash-mode' 
-        : value === 'Member bank account'? 'member-mode': 'cheque-mode'}>
-          <hr /> <span>{value}</span>
-        </div>
-        </div>
-    }) },
-    { Header: "Charges", accessor: "charges", Cell:(({value})=>{
-      return <span>NGN {new Intl.NumberFormat('en-US', {minimumFractionDigits:2}).format(value)}</span>
-    }) },
-    { Header: "Status", accessor: "status", Cell:(({value})=>{
-      return <div className={value ==='Pending' ? 'pending-status' 
-      : value === 'Posted'? 'approved-status': 'rejected-status'}>
-        <hr /> <span>{value === 'Posted' ? 'Approved': value}</span>
+    { Header: "Status", accessor: "state", Cell:(({value})=>{
+      const label = STATE_LABELS[value] || value;
+      const cls = ['approved', 'disbursed'].includes(value) ? 'approved-status'
+        : ['rejected', 'cancelled'].includes(value) ? 'rejected-status' : 'pending-status';
+      return <div className={cls}>
+        <hr /> <span>{label}</span>
       </div>
     }) },
   ];

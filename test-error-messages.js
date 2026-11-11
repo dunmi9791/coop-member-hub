@@ -11,7 +11,7 @@ async function testErrorMessages() {
         jsonrpc: "2.0",
         method: "call",
         params: {
-          db: "nlng_coop",
+          db: "ngml_corp",
           login: "invalid@email.com",
           password: "wrongpassword",
           context: {}
@@ -24,7 +24,7 @@ async function testErrorMessages() {
         jsonrpc: "2.0",
         method: "call",
         params: {
-          db: "nlng_coop",
+          db: "ngml_corp",
           login: "",
           password: "",
           context: {}
@@ -37,7 +37,7 @@ async function testErrorMessages() {
         jsonrpc: "2.0",
         method: "call",
         params: {
-          db: "nlng_coop",
+          db: "ngml_corp",
           login: "test@ngml.com",
           password: "wrongpass123",
           context: {}
@@ -50,7 +50,7 @@ async function testErrorMessages() {
     console.log(`\n--- Testing: ${testCase.name} ---`);
     
     try {
-      const response = await axios.post('https://nlngcoop.cooplatform.com.ng/web/session/authenticate', testCase.payload, {
+      const response = await axios.post('http://41.78.157.36:8069/web/session/authenticate', testCase.payload, {
         withCredentials: true,
         timeout: 10000,
         headers: {
