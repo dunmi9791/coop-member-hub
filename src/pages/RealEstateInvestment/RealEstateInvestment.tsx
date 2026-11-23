@@ -1,11 +1,19 @@
 import Scroller from '@/components/ui/Scroller'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Building2, TrendingUp, Wallet, BarChart3 } from 'lucide-react'
+import { fetchCashCalls } from '@/services/realEstateApi'
 
 const RealEstateInvestment = () => {
   const { pathname } = useLocation()
+  const [pendingCashCalls, setPendingCashCalls] = useState(0)
+
+  useEffect(() => {
+    fetchCashCalls()
+      .then((res) => setPendingCashCalls(res.pending_count))
+      .catch(() => setPendingCashCalls(0))
+  }, [pathname])
 
   // Demo portfolio data
   const portfolioData = {
@@ -96,6 +104,14 @@ const RealEstateInvestment = () => {
           </Link>
           <Link to='my-investments' className={pathname.includes('real-estate/my-investments') ? 'active-selector bg-gradient-primary' : 'inactive'}>
             My Investments
+          </Link>
+          <Link to='cash-calls' className={pathname.includes('real-estate/cash-calls') ? 'active-selector bg-gradient-primary' : 'inactive'}>
+            Cash Calls
+            {pendingCashCalls > 0 && (
+              <span className='ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-xs text-white'>
+                {pendingCashCalls}
+              </span>
+            )}
           </Link>
         </div>
       </Scroller>

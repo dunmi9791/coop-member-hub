@@ -182,3 +182,94 @@ export const subscribeToUnit = async (
     };
   }
 };
+
+// ---------------------------------------------------------------------------
+// Cash calls: demands for payment of a project milestone
+// ---------------------------------------------------------------------------
+
+export type CashCallMethod = 'cash' | 'savings' | 'loan';
+export type CashCallStatus = 'pending' | 'responded' | 'paid' | 'cancelled';
+
+export interface CashCallSplit {
+  method: CashCallMethod;
+  amount: number;
+}
+
+export interface CashCallProof {
+  name: string;
+  mimetype: string;
+  data: string; // base64 or data URL
+}
+
+export interface CashCall {
+  id: number;
+  reference: string;
+  project: { id: number; name: string; code: string };
+  milestone: string;
+  stage: string | null;
+  message: string;
+  call_date: string | null;
+  due_date: string | null;
+  status: CashCallStatus;
+  can_respond: boolean;
+  currency: { id: number; name: string; symbol: string };
+  amount_due: number;
+  amount_outstanding: number;
+  amount_paid: number;
+  loan_available: boolean;
+  items: {
+    milestone_id: number;
+    unit: string;
+    subscription: string;
+    amount: number;
+    remaining: number;
+    status: string;
+  }[];
+  response: {
+    date: string | null;
+    via: string | null;
+    note: string;
+    splits: CashCallSplit[];
+    proofs: { id: number; name: string }[];
+  } | null;
+}
+
+export interface CashCallsResult {
+  count: number;
+  pending_count: number;
+  savings_balance: number | null;
+  cash_calls: CashCall[];
+}
+
+const rpc = (params: Record<string, unknown>) => ({
+  jsonrpc: '2.0',
+  method: 'call',
+  params,
+  id: Math.floor(Math.random() * 1000),
+});
+
+export const fetchCashCalls = async (status?: CashCallStatus): Promise<CashCallsResult> => {
+  const response = await api.post('/api/portal/real_estate/cash_calls', rpc(status ? { status } : {}));
+  const data = response.data;
+  if (data?.error) {
+    throw new Error(data.error.data?.message || data.error.message);
+  }
+  return data.result;
+};
+
+export const respondToCashCall = async (
+  lineId: number,
+  splits: CashCallSplit[],
+  note?: string,
+  proofs?: CashCallProof[],
+): Promise<{ success: boolean; message: string; cash_call?: CashCall }> => {
+  const response = await api.post(
+    '/api/portal/real_estate/cash_call_respond',
+    rpc({ line_id: lineId, splits, note, proofs }),
+  );
+  const data = response.data;
+  if (data?.error) {
+    return { success: false, message: data.error.data?.message || data.error.message };
+  }
+  return data.result;
+};

@@ -25,8 +25,11 @@ FROM nginx:alpine
 # Copy built assets from build stage
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# nginx config is a template: the nginx image runs envsubst on
+# /etc/nginx/templates/*.template at start-up, writing conf.d/default.conf.
+# Override at run time: docker run -e ODOO_TARGET=http://odoo:8069 ...
+ENV ODOO_TARGET=http://41.78.157.36:8069
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
 EXPOSE 80
 

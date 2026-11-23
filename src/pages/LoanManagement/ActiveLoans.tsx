@@ -35,8 +35,43 @@ interface ActiveLoan {
   balance_interest: number;
   balance_total: number;
   monthly_repayment: number;
+  original_installment?: number;
+  current_installment?: number;
+  maturity_date?: string | null;
+  can_vary_installment?: boolean;
   status: string;
 }
+
+interface InstallmentPreview {
+  success: boolean;
+  message?: string;
+  can_vary: boolean;
+  minimum_installment: number;
+  current_installment: number;
+  balance_principal: number;
+  current_maturity_date: string | null;
+  pending_request: { id: number; ref: string; new_installment: number } | null;
+  new_installment?: number;
+  installments_remaining_now?: number;
+  installments_remaining_new?: number;
+  new_maturity_date?: string;
+  interest_saved?: number;
+}
+
+type AdjustmentType = 'topup' | 'restructure' | 'offset_savings' | 'installment';
+
+const formatDate = (iso?: string | null) =>
+  iso ? new Date(iso + 'T00:00:00').toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+
+const fetchInstallmentPreview = async (loanId: number, newAmount?: number): Promise<InstallmentPreview | null> => {
+  const resp = await api.post('/api/portal/loan_installment/preview', {
+    jsonrpc: '2.0',
+    method: 'call',
+    params: { loan_id: loanId, ...(newAmount ? { new_installment_amount: newAmount } : {}) },
+    id: 1,
+  });
+  return resp.data.result ?? null;
+};
 
 interface LoanType {
   id: number;
@@ -51,7 +86,7 @@ const ActiveLoans = () => {
   // Adjustment state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState<ActiveLoan | null>(null);
-  const [adjustmentType, setAdjustmentType] = useState<'topup' | 'restructure' | 'offset_savings'>('topup');
+  const [adjustmentType, setAdjustmentType] = useState<AdjustmentType>('topup');
   const [amount, setAmount] = useState<number>(0);
   const [newLoanType, setNewLoanType] = useState<string>('');
   const [newTenureMonths, setNewTenureMonths] = useState<number>(0);
@@ -62,6 +97,44 @@ const ActiveLoans = () => {
   const [savingsAccounts, setSavingsAccounts] = useState<any[]>([]);
   const [selectedSavingsAccountId, setSelectedSavingsAccountId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Installment variation state
+  const [newInstallment, setNewInstallment] = useState<number>(0);
+  const [installmentInfo, setInstallmentInfo] = useState<InstallmentPreview | null>(null);
+  const [installmentPreview, setInstallmentPreview] = useState<InstallmentPreview | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  // Load the member's limits when they pick "Increase Installment"
+  useEffect(() => {
+    if (!isDialogOpen || adjustmentType !== 'installment' || !selectedLoan) return;
+    let cancelled = false;
+    setInstallmentInfo(null);
+    fetchInstallmentPreview(selectedLoan.id)
+      .then((info) => {
+        if (cancelled || !info) return;
+        setInstallmentInfo(info);
+        setNewInstallment((prev) => prev || info.current_installment);
+      })
+      .catch((e) => console.error('Error loading installment info:', e));
+    return () => { cancelled = true; };
+  }, [isDialogOpen, adjustmentType, selectedLoan]);
+
+  // Live preview of the new schedule (debounced)
+  useEffect(() => {
+    setInstallmentPreview(null);
+    if (adjustmentType !== 'installment' || !selectedLoan || !installmentInfo?.can_vary) return;
+    if (!newInstallment || newInstallment === installmentInfo.current_installment) return;
+    if (newInstallment < installmentInfo.minimum_installment) return;
+    let cancelled = false;
+    setPreviewLoading(true);
+    const t = setTimeout(() => {
+      fetchInstallmentPreview(selectedLoan.id, newInstallment)
+        .then((p) => { if (!cancelled) setInstallmentPreview(p); })
+        .catch((e) => console.error('Error previewing installment:', e))
+        .finally(() => { if (!cancelled) setPreviewLoading(false); });
+    }, 400);
+    return () => { cancelled = true; clearTimeout(t); setPreviewLoading(false); };
+  }, [newInstallment, adjustmentType, selectedLoan, installmentInfo]);
 
   useEffect(() => {
     const fetchActiveLoans = async () => {
@@ -152,6 +225,9 @@ const ActiveLoans = () => {
     setNewAprPercent(0); // This could be initialized to current loan APR if available
     setReason('');
     setSelectedSavingsAccountId('');
+    setNewInstallment(0);
+    setInstallmentInfo(null);
+    setInstallmentPreview(null);
     setIsDialogOpen(true);
   };
 
@@ -185,6 +261,7 @@ const ActiveLoans = () => {
             topup_amount: adjustmentType === 'topup' ? amount : null,
             loan_type_id: adjustmentType === 'restructure' && newLoanType ? Number(newLoanType) : null,
             new_tenure_months: adjustmentType === 'restructure' && newTenureMonths > 0 ? newTenureMonths : null,
+            new_installment_amount: adjustmentType === 'installment' ? newInstallment : null,
             rate_mode: adjustmentType === 'restructure' ? rateMode : 'keep',
             new_apr_percent: adjustmentType === 'restructure' && rateMode === 'keep' && newAprPercent > 0 ? newAprPercent : null,
             reason: reason || null,
@@ -199,7 +276,9 @@ const ActiveLoans = () => {
       if (result?.status === 'success' || result?.success) {
         toast({
           title: "Success",
-          description: result?.message || "Loan request submitted successfully",
+          description: adjustmentType === 'installment'
+            ? "Your installment change has been submitted for approval."
+            : result?.message || "Loan request submitted successfully",
         });
         setIsDialogOpen(false);
       } else {
@@ -271,6 +350,12 @@ const ActiveLoans = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       {formatCurrency(loan.monthly_repayment)}
+                      {!!loan.current_installment && (
+                        <div className="text-xs text-muted-foreground">
+                          Principal {formatCurrency(loan.current_installment)}
+                          {loan.maturity_date && <> · ends {formatDate(loan.maturity_date)}</>}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
@@ -314,7 +399,7 @@ const ActiveLoans = () => {
               <Label htmlFor="adjustment-type">Adjustment Type</Label>
               <Select 
                 value={adjustmentType} 
-                onValueChange={(value: 'topup' | 'restructure' | 'offset_savings') => setAdjustmentType(value)}
+                onValueChange={(value: AdjustmentType) => setAdjustmentType(value)}
               >
                 <SelectTrigger id="adjustment-type">
                   <SelectValue placeholder="Select type" />
@@ -323,11 +408,97 @@ const ActiveLoans = () => {
                   <SelectItem value="topup">Top Up</SelectItem>
                   <SelectItem value="restructure">Restructure</SelectItem>
                   <SelectItem value="offset_savings">Offset with Savings</SelectItem>
+                  {selectedLoan?.can_vary_installment !== false && (
+                    <SelectItem value="installment">Increase Installment</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
 
-            {adjustmentType === 'topup' ? (
+            {adjustmentType === 'installment' ? (
+              !installmentInfo ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Loading your installment details...
+                </div>
+              ) : installmentInfo.pending_request ? (
+                <p className="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+                  You already have a pending request ({installmentInfo.pending_request.ref}) to change this installment to{' '}
+                  {formatCurrency(installmentInfo.pending_request.new_installment)}. Wait for it to be approved before making another.
+                </p>
+              ) : !installmentInfo.can_vary ? (
+                <p className="text-sm text-muted-foreground">
+                  {installmentInfo.message || "This loan's installment can't be changed."}
+                </p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-3 rounded-md bg-muted/50 p-3 text-sm">
+                    <div>
+                      <div className="text-muted-foreground">Current installment</div>
+                      <div className="font-semibold">{formatCurrency(installmentInfo.current_installment)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Minimum allowed</div>
+                      <div className="font-semibold">{formatCurrency(installmentInfo.minimum_installment)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Principal left</div>
+                      <div className="font-semibold">{formatCurrency(installmentInfo.balance_principal)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Ends on</div>
+                      <div className="font-semibold">{formatDate(installmentInfo.current_maturity_date)}</div>
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="new-installment">New Monthly Principal Installment</Label>
+                    <NumericFormat
+                      id="new-installment"
+                      customInput={Input}
+                      thousandSeparator={true}
+                      prefix={'₦'}
+                      decimalScale={2}
+                      value={newInstallment || ''}
+                      onValueChange={(values) => setNewInstallment(Number(values.value))}
+                      placeholder="Enter amount"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Pay more each period to clear your loan sooner. It can't go below {formatCurrency(installmentInfo.minimum_installment)}.
+                    </p>
+                    {newInstallment > 0 && newInstallment < installmentInfo.minimum_installment && (
+                      <p className="text-xs text-destructive">
+                        Must be at least {formatCurrency(installmentInfo.minimum_installment)}.
+                      </p>
+                    )}
+                  </div>
+                  {previewLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Calculating...
+                    </div>
+                  ) : installmentPreview && !installmentPreview.success ? (
+                    <p className="text-xs text-destructive">{installmentPreview.message}</p>
+                  ) : installmentPreview?.new_maturity_date ? (
+                    <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-900 space-y-1">
+                      <div className="flex justify-between">
+                        <span>Installments left</span>
+                        <span className="font-semibold">
+                          {installmentPreview.installments_remaining_now} → {installmentPreview.installments_remaining_new}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Loan ends</span>
+                        <span className="font-semibold">{formatDate(installmentPreview.new_maturity_date)}</span>
+                      </div>
+                      {(installmentPreview.interest_saved ?? 0) !== 0 && (
+                        <div className="flex justify-between">
+                          <span>{(installmentPreview.interest_saved ?? 0) > 0 ? 'Projected interest saved' : 'Projected extra interest'}</span>
+                          <span className="font-semibold">{formatCurrency(Math.abs(installmentPreview.interest_saved ?? 0))}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </>
+              )
+            ) : adjustmentType === 'topup' ? (
               <div className="grid gap-2">
                 <Label htmlFor="amount">Top Up Amount</Label>
                 <NumericFormat
@@ -452,6 +623,13 @@ const ActiveLoans = () => {
               type="submit" 
               onClick={handleSubmit} 
               disabled={submitting || (
+                adjustmentType === 'installment' ? (
+                  !installmentInfo?.can_vary ||
+                  newInstallment < (installmentInfo?.minimum_installment ?? Infinity) ||
+                  newInstallment === installmentInfo?.current_installment ||
+                  previewLoading ||
+                  installmentPreview?.success === false
+                ) :
                 adjustmentType === 'topup' ? amount <= 0 : 
                 adjustmentType === 'offset_savings' ? (amount <= 0 || !selectedSavingsAccountId) :
                 (!newLoanType || (rateMode === 'keep' && newAprPercent <= 0))
