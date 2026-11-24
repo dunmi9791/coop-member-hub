@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="swoosh" x1="0.15" y1="0.95" x2="0.75" y2="0.05">
+      <stop offset="0" stop-color="#D4DC1E"/>
+      <stop offset="0.45" stop-color="#2FAE4E"/>
+      <stop offset="1" stop-color="#3B8FE0"/>
+    </linearGradient>
+    <mask id="crescent">
+      <rect width="64" height="64" fill="#fff"/>
+      <circle cx="37" cy="29" r="21" fill="#000"/>
+    </mask>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#0A4F6E"/>
+  <circle cx="30" cy="34" r="24" fill="url(#swoosh)" mask="url(#crescent)"/>
+  <path d="M28 43V21h5.5l8 12.5V21H47v22h-5.5l-8-12.5V43z" fill="#fff"/>
+</svg>

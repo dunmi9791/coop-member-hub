@@ -1,73 +1,30 @@
-# Welcome to your Lovable project
+# NLNG Cooperative Member Portal
 
-## Project info
+Member-facing web portal for the NLNG Staff Cooperative. It talks to the Odoo
+backend through the `/api/portal/*`, `/web/session/*` and `/odoo/api/*` routes.
 
-**URL**: https://lovable.dev/projects/79e6d042-edef-473e-ba4b-42a539cfd704
+Built with Vite, TypeScript, React, shadcn-ui and Tailwind CSS.
 
-## How can I edit this code?
+## Local development
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/79e6d042-edef-473e-ba4b-42a539cfd704) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Requires Node.js 20+ and npm.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+npm install
+cp .env.example .env   # then set ODOO_TARGET to your Odoo server
+npm run dev            # http://localhost:8080
 ```
 
-**Edit a file directly in GitHub**
+`ODOO_TARGET` is the Odoo URL the dev server proxies to, for example
+`http://127.0.0.1:8079` for a local Odoo. It can also be set in the shell:
+`ODOO_TARGET=http://127.0.0.1:8079 npm run dev`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Production (Docker)
 
-**Use GitHub Codespaces**
+The image builds the static app and serves it with nginx, which proxies the
+Odoo routes to `ODOO_TARGET` (read when the container starts):
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/79e6d042-edef-473e-ba4b-42a539cfd704) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+```sh
+docker build -t coop-member-hub .
+docker run -p 80:80 -e ODOO_TARGET=http://your-odoo:8069 coop-member-hub
+```
