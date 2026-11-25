@@ -280,7 +280,7 @@ const MemberProfile = () => {
     status: profile?.membership_status || "Unknown",
     phone: profile?.phone || "Not Specified",
     mobile: profile?.mobile || "Not Specified",
-    profilePic: profile?.photo ? `data:image/jpeg;base64,${profile.photo}` : "https://i.pravatar.cc/150?img=12",
+    profilePic: profile?.photo ? `data:image/jpeg;base64,${profile.photo}` : "",
   };
 
   return (
@@ -290,11 +290,22 @@ const MemberProfile = () => {
       </div>
       {/* Profile Header */}
       <div className="flex flex-col md:flex-row items-center gap-6 mb-8">
-        <img
-          src={displayMember.profilePic}
-          alt={displayMember.name}
-          className="w-32 h-32 rounded-full shadow-md object-cover"
-        />
+        {displayMember.profilePic ? (
+          <img
+            src={displayMember.profilePic}
+            alt={displayMember.name}
+            className="w-32 h-32 rounded-full shadow-md object-cover"
+          />
+        ) : (
+          <div className="w-32 h-32 rounded-full shadow-md bg-primary/10 text-primary flex items-center justify-center text-4xl font-semibold uppercase">
+            {String(displayMember.name || "")
+              .split(/\s+/)
+              .filter(Boolean)
+              .slice(0, 2)
+              .map((part) => part[0])
+              .join("")}
+          </div>
+        )}
         <div>
           <h1 className="text-2xl font-bold text-foreground capitalize">
             {displayMember.name}

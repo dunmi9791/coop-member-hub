@@ -273,3 +273,78 @@ export const respondToCashCall = async (
   }
   return data.result;
 };
+
+// ---------------------------------------------------------------------------
+// My investments: the member's own subscriptions
+// ---------------------------------------------------------------------------
+
+export type SubscriptionStatus = 'draft' | 'confirmed' | 'allocated' | 'cancelled';
+
+export interface Currency {
+  id: number;
+  name: string;
+  symbol: string;
+}
+
+export interface MyInvestment {
+  id: number;
+  reference: string;
+  status: SubscriptionStatus;
+  subscribed_on: string | null;
+  project: {
+    id: number;
+    name: string;
+    code: string;
+    type: 'land' | 'building';
+    location: string;
+    estimated_completion_date: string | null;
+    picture_url: string | null;
+  };
+  unit_count: number;
+  units: {
+    id: number;
+    name: string;
+    number: string;
+    block: string;
+    house_type: string;
+    size_sqm: number;
+    price: number;
+  }[];
+  currency: Currency;
+  amount_total: number;
+  amount_paid: number;
+  amount_outstanding: number;
+  certificate_number: string | null;
+  certificate_issue_date: string | null;
+  next_milestone: {
+    name: string;
+    due_date: string | null;
+    amount: number;
+    remaining: number;
+  } | null;
+}
+
+export interface MyInvestmentsResult {
+  count: number;
+  summary: {
+    currency: Currency;
+    total_committed: number;
+    total_paid: number;
+    total_outstanding: number;
+    active_count: number;
+    unit_count: number;
+  };
+  investments: MyInvestment[];
+}
+
+export const fetchMyInvestments = async (includeCancelled = false): Promise<MyInvestmentsResult> => {
+  const response = await api.post(
+    '/api/portal/real_estate/my_investments',
+    rpc(includeCancelled ? { include_cancelled: true } : {}),
+  );
+  const data = response.data;
+  if (data?.error) {
+    throw new Error(data.error.data?.message || data.error.message);
+  }
+  return data.result;
+};

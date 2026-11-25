@@ -197,21 +197,8 @@ const ActiveLoans = () => {
       fetchLoanTypes();
       fetchSavingsAccounts();
     } else {
-        // Fallback or demo data
-        setLoans([
-            {
-                id: 36,
-                loan_type_id: 1,
-                loan_type: "Target",
-                loan_amount: 2000034.0,
-                balance_principal: 2000034.0,
-                balance_interest: 1691695.43,
-                balance_total: 3691729.4299999997,
-                monthly_repayment: 0.0,
-                status: "disbursed"
-            }
-        ]);
-        setLoading(false);
+      setLoans([]);
+      setLoading(false);
     }
   }, [credentials]);
 
