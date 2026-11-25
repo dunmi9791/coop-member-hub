@@ -16,6 +16,10 @@ RUN npm install --include=dev
 # Copy source code
 COPY . .
 
+# Odoo database name, compiled into the app at build time.
+# Override with: docker build --build-arg VITE_ODOO_DB=my_db .
+ARG VITE_ODOO_DB=ngml_corp
+
 # Build the application
 RUN ./node_modules/.bin/vite build
 

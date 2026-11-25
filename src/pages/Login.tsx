@@ -24,11 +24,18 @@ const Login = () => {
     setIsLoading(true);
     setError("");
 
+    const db = import.meta.env.VITE_ODOO_DB;
+    if (!db) {
+      setError("Portal is misconfigured: no database set (VITE_ODOO_DB).");
+      setIsLoading(false);
+      return;
+    }
+
     const payload = {
       jsonrpc: "2.0",
       method: "call",
       params: {
-        db: "ngml_corp",
+        db,
         login: email,
         password: password,
         context: {},
